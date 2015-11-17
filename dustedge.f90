@@ -3,7 +3,7 @@
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! XSPEC local model for dust absorption edge structure
 ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-subroutine dustedge(ear, ne, param, ifl, photar)
+subroutine ismdust(ear, ne, param, ifl, photar)
 !
 ! The main routine to call all subroutines
 !
