@@ -9,10 +9,10 @@ subroutine dustedge(ear, ne, param, ifl, photar)
 !
 implicit none
 integer,parameter :: num_param = 3
-integer,parameter :: nemod=650000 !Number of elements for each ion cross section.
+integer,parameter :: nemod=24552 !Number of elements for each cross section.
 integer :: ne, ifl, a
-double precision :: msil, mgra, rshift
-real :: ear(0:ne), param(num_param),photar(ne)
+double precision :: msil, mgra, rshift, emod(1:nemod), coemod(nemod), bxs(0:ngrain,nemod), cgrain(ngrain), bener(1:nemod)
+real :: ear(0:ne), param(num_param), photar(ne)
 logical :: startup=.true.
 character (len=40) version
 version='0.1'
@@ -24,12 +24,12 @@ version='0.1'
   print *, 'WARNING: If used in conjunction with neutral metal absorption models'
   print *, '(e.g. TBabs, TBnew), be sure to change abundances to stop'
   print *, 'from overestimating the ISM metal absorption component.'
-  print *, '##---------------------------------------------------------------------##'
-  print *, '!! ISMdust is best used as a local model template for absorption edges !!'
-  print *, '##---------------------------------------------------------------------##'
+  print *, '##-------------------------------------------------------------------##'
+  print *, '!! ISMdust is best as a template for absorption edges, not continuum !!'
+  print *, '##-------------------------------------------------------------------##'
   print *, ' '
-  call read_cross_sections_ismdust( nemod,bxs,ifl)
-  call create_energy_grid_ismdust(1.d1,1.d4,bener,nemod) !Absorption coefficient calculation grid  = cross section grid
+  call read_cross_sections_ismdust(nemod,bxs,ifl)
+  call create_energy_grid_ismdust(1.d1,1.d4,bener,nemod) !Cross section grid
   startup=.false.  
  endif
 ! Model parameters
@@ -38,7 +38,7 @@ mgra = param(2)
 rshift = param(3)
 zfac = 1/(1.d0+dble(rshift))
 
-call extinction_ismdust(msil, mgra, zfac, emod, nemod, coemod,bxs,cion,ifl,bener)
+call extinction_ismdust(msil, mgra, zfac, emod, nemod, coemod,bxs,cgrain,ifl,bener)
 !
 call map_to_grid_ismdust(dble(ear),ne,emod,nemod,photar,coemod,ifl)
 return
@@ -46,9 +46,9 @@ end subroutine ismdust
 ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++!
 subroutine read_cross_sections_ismdust(bnene,xs,ifl)
 !
-! This routine reads all cross sections and puts them on a given grid
+! This routine reads cross sections and puts them on a given grid
 !
-! It uses the X-Spec local variable/dictionary value ISMABSROOT
+! It uses the X-Spec local variable/dictionary value ISMDUSTROOT
 ! to locate the data file. If this is not set then it uses
 ! the setting of the local_dir parameter below (which should be
 ! changed to match the location of the data file). The path -
@@ -57,15 +57,15 @@ subroutine read_cross_sections_ismdust(bnene,xs,ifl)
 ! <path>/atomic_data/AtomicData.fits
 !
 implicit none
-integer,parameter :: nion=30, out_unit=20
+integer,parameter :: ngrain=2, out_unit=20
 integer :: bnene, ifl, i, j, status
-integer :: nemax(0:nion)
-double precision :: ener(0:nion,bnene), xs(0:nion,bnene)
-character (*), parameter :: fileloc = '/atomic_data/AtomicData.fits'
-character (*), parameter :: ismreadchat = 'ismabs: reading from '
+integer :: nemax(0:ngrain)
+double precision :: ener(0:ngrain,bnene), xs(0:ngrain,bnene)
+character (*), parameter :: fileloc = 'xs_ext_grid.fits'
+character (*), parameter :: ismreadchat = 'ismdust: reading from '
 character (len=255 + 29) :: filename2 ! len(fileloc)
-character (len=240) :: local_dir = '/host/XSP/softwares/XSPEC_model/IsmModel/model/dev'
-character (len=255) :: ismabs_root = ''
+character (len=240) :: local_dir = '/Users/lia/dev/dustedge'
+character (len=255) :: ismdust_root = ''
 character (len=len(ismreadchat)+len(filename2)) :: chatmsg = ''
 integer inunit,readwrite,blocksize
 integer :: hdutype,colnum
@@ -73,20 +73,20 @@ integer :: felem=1, nulld=0
 logical :: anynull
 character (len=255) :: fgmstr
 external :: fgmstr
-!Number of elements for each ion cross section.
-do i=0,nion
-nemax(i)=650000
+!Number of elements for each grain type cross section.
+do i=0,ngrain
+nemax(i)=24552
 enddo
 ! Where do we look for the data?
-ismabs_root = trim(fgmstr('ISMABSROOT'))
-if (ismabs_root .EQ. '') then
-ismabs_root = local_dir
+ismdust_root = trim(fgmstr('ISMDUSTROOT'))
+if (ismdust_root .EQ. '') then
+ismdust_root = local_dir
 endif
 ! parameters to specify the opening process
 status=0
 readwrite=0
 blocksize=1
-filename2=trim(ismabs_root) // fileloc
+filename2=trim(ismdust_root) // fileloc
 chatmsg=ismreadchat // filename2
 call xwrite(chatmsg, 20)
 ! Get an unused Logical Unit Number to use to open the FITS file.
@@ -103,18 +103,17 @@ call ftgcvd(inunit,colnum,j,felem,1,nulld,ener(i,j),anynull,status)
 enddo
 enddo
 !Assign the energy grid to all ion energy grids
-do i=1, nion
+do i=1,ngrain
 do j=1,nemax(i)
 ener(i,j)= ener(0,j)
 enddo
 enddo
-!Read cross sections
-colnum=2
-do i=0, nion
+!Read in the cross section information
+do i=0,ngrain
 do j=1,nemax(i)
-call ftgcvd(inunit,colnum,j,felem,1,nulld,xs(i,j),anynull,status)
+!call ftgcvd(inunit,colnum,j,felem,1,nulld,xs(i,j),anynull,status)
+call ftgcvd(inunit,i+2,j,felem,1,nulld,xs(i,j),anynull,status)
 enddo
-colnum=colnum+1
 enddo
 ! Report on errors (done before closing the file in case the error
 ! comes from closing the file). Unfortunately the X-Spec API does not
@@ -131,91 +130,43 @@ endif
 ! Close the file and free the unit number
 call ftclos(inunit, status)
 call ftfiou(-1, status)
-end subroutine read_cross_sections_ismabs
+end subroutine read_cross_sections_ismdust
 ! ======================================= !
-subroutine absorption_ismabs(col22, N_He_0, N_He_1, N_C_0, N_C_1, N_C_2, &
-N_N_0, N_N_1, N_N_2, N_O_0, N_O_1, N_O_2, &
-N_Ne_0, N_Ne_1, N_Ne_2, N_Mg_0, N_Mg_1, N_Mg_2, &
-N_Si_0, N_Si_1, N_Si_2, N_S_0, N_S_1, N_S_2, &
-N_Ar_0, N_Ar_1, N_Ar_2, N_Ca_0, &
-N_Ca_1, N_Ca_2, N_Fe_0, &
-zfac, e1, bnene, coeff, bxs2,cion,ifl,bener)
+subroutine extinction_ismdust(msil, mgra, zfac, e1, bnene, coeff, bxs2,cgrain,ifl,bener)
 !
 ! This is routine that calculates the optical depth given the column densities
 ! Finally returns the absorption coefficient exp(-tau)
 !
 implicit none
-integer,parameter :: nion=30, out_unit=20
+integer,parameter :: grain=2, out_unit=20
 integer :: bnene, ifl
 integer :: i, j
-double precision :: col22, col, tmp, cion(nion)
-double precision :: bener(0:bnene), bxs2(0:nion,bnene), e1(0:bnene)
+double precision :: msil, mgra, tmp, cgrain(grain)
+double precision :: bener(0:bnene), bxs2(0:ngrain,bnene), e1(0:bnene)
 double precision :: tau, coeff(bnene)
-double precision :: N_He_0, N_He_1, N_C_0, N_C_1, N_C_2
-double precision :: N_N_0, N_N_1, N_N_2, N_O_0, N_O_1, N_O_2
-double precision :: N_Ne_0, N_Ne_1, N_Ne_2, N_Mg_0, N_Mg_1, N_Mg_2
-double precision :: N_Si_0, N_Si_1, N_Si_2, N_S_0, N_S_1, N_S_2
-double precision :: N_Ar_0, N_Ar_1, N_Ar_2, N_Ca_0
-double precision :: N_Ca_1, N_Ca_2, N_Fe_0
 double precision :: zfac
 real hphoto, gphoto
 external hphoto, gphoto
 
 
-!Column densities
- cion(1)=N_He_0
- cion(2)=N_He_1
- cion(3)=N_C_0
- cion(4)=N_C_1
- cion(5)=N_C_2
- cion(6)=N_N_0
- cion(7)=N_N_1
- cion(8)=N_N_2
- cion(9)=N_O_0
- cion(10)=N_O_1
- cion(11)=N_O_2
- cion(12)=N_Ne_0
- cion(13)=N_Ne_1
- cion(14)=N_Ne_2
- cion(15)=N_Mg_0
- cion(16)=N_Mg_1
- cion(17)=N_Mg_2
- cion(18)=N_Si_0
- cion(19)=N_Si_1
- cion(20)=N_Si_2
- cion(21)=N_S_0
- cion(22)=N_S_1
- cion(23)=N_S_2
- cion(24)=N_Ar_0
- cion(25)=N_Ar_1
- cion(26)=N_Ar_2
- cion(27)=N_Ca_0
- cion(28)=N_Ca_1
- cion(29)=N_Ca_2
- cion(30)=N_Fe_0
+!Mass column densities (units of 1.e-4 g cm^-2)
+ cion(1)=msil
+ cion(2)=mgra
 
-
-! Calculates the optical depth and the absorption coefficient exp(-tau)
-col=col22*1.d22
+! Calculates the optical depth and the extinction coefficient exp(-tau)
 e1(0)=(bener(0)*zfac)/1.d3
 do i=1,bnene
 e1(i)=(bener(i)*zfac)/1.d3
-! In case you want to read xspec hydrogen column density
-! bxs2(0,i)=hphoto(real(e1(i-1)),real(e1(i)))
-! tau for hydrogen column density
-tmp=col*bxs2(0,i)
-! Calculates the optical depth and the absorption coefficient exp(-tau)
-tmp= tmp+(bxs2(1,i)*0.1*col) ! He I column density = 0.1 Nh
-do j=2,nion
-tmp=tmp+(cion(j)*bxs2(j,i)*1.d16)
-enddo
+tmp=msil*bxs2(0,i)
+tmp=tmp+mgra*bxs2(1,i)
 tau=tmp
 coeff(i)=dexp(-tau)
 enddo
-end subroutine absorption_ismabs
+
+end subroutine extinction_ismdust
 ! ======================================= !
-subroutine map_to_grid_ismabs(new_en,nne,old_en, one, nflux, old_flu,ifl)
-! This routine map to a given grid
+subroutine map_to_grid_ismdust(new_en,nne,old_en, one, nflux, old_flu,ifl)
+! This routine maps to a given grid
 implicit none
 integer :: i, j, k, one, nne, bmin, bmax,ifl
 double precision :: new_en(0:nne)
@@ -225,8 +176,8 @@ real :: nflux(nne)
 integer,parameter :: out_unit=20
 do i=1,nne
 nflux(i)=real(0.d0)
-call dbinsrch_ismabs(new_en(i-1),bmin,old_en,one+1)
-call dbinsrch_ismabs(new_en(i),bmax,old_en,one+1)
+call dbinsrch_ismdust(new_en(i-1),bmin,old_en,one+1)
+call dbinsrch_ismdust(new_en(i),bmax,old_en,one+1)
 bmin = bmin-1
 bmax = bmax-1
 ! Linear interpolation
@@ -255,9 +206,9 @@ s=real(stemp/etemp)
 endif
 nflux(i)=real(s)
 enddo
-end subroutine map_to_grid_ismabs
+end subroutine map_to_grid_ismdust
 ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-subroutine dbinsrch_ismabs(e,k,ener,n)
+subroutine dbinsrch_ismdust(e,k,ener,n)
 !
 ! search for energy e in array ener(1:n) and return bin k for
 ! which ener(k).le.e.lt.ener(k+1)
@@ -283,9 +234,9 @@ print *,'Energy out of bounds. Should not happen'
 stop
 endif
 k=klo
-end subroutine dbinsrch_ismabs
+end subroutine dbinsrch_ismdust
 ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-subroutine create_energy_grid_ismabs(emin,emax,en,nen)
+subroutine create_energy_grid_ismdust(emin,emax,en,nen)
 implicit none
 integer :: i, nen
 double precision :: en(nen)
@@ -295,4 +246,4 @@ do i=1,nen
 en(i)=10**(((log10(emax)-log10(emin))*real(i)/nen)+log10(emin))
 enddo
 !
-end subroutine create_energy_grid_ismabs
+end subroutine create_energy_grid_ismdust
