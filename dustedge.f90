@@ -13,7 +13,7 @@ integer,parameter :: ngrain=1
 integer,parameter :: nemod=24552 !Number of elements for each cross section.
 integer :: ne, ifl, a
 double precision :: msil, mgra, rshift, emod(1:nemod), coemod(nemod)
-double precision :: bxs(0:ngrain,nemod), cgrain(ngrain), bener(nemod)
+double precision :: bxs(0:ngrain,nemod), cgrain(ngrain+1), bener(nemod)
 double precision :: zfac
 real :: ear(0:ne), param(num_param), photar(ne)
 logical :: startup=.true.
@@ -137,7 +137,7 @@ implicit none
 integer,parameter :: ngrain=1, out_unit=20
 integer :: bnene, ifl
 integer :: i, j
-double precision :: msil, mgra, tmp, cgrain(ngrain)
+double precision :: msil, mgra, cgrain(ngrain+1)
 double precision :: bener(0:bnene), bxs2(0:ngrain,bnene), e1(0:bnene)
 double precision :: tau, coeff(bnene)
 double precision :: zfac
@@ -153,9 +153,7 @@ external hphoto, gphoto
 e1(0)=(bener(0)*zfac)/1.d3
 do i=1,bnene
 e1(i)=(bener(i)*zfac)/1.d3
-tmp=msil*bxs2(0,i)
-tmp=tmp+mgra*bxs2(1,i)
-tau=tmp
+tau=mgra*bxs2(1,i) + msil*bxs2(0,i)
 coeff(i)=dexp(-tau)
 enddo
 
