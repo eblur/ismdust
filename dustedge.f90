@@ -9,11 +9,11 @@ subroutine ismdust(ear, ne, param, ifl, photar)
 !
 implicit none
 integer,parameter :: num_param = 3
-integer,parameter :: ngrain=2
+integer,parameter :: ngrain=1
 integer,parameter :: nemod=24552 !Number of elements for each cross section.
 integer :: ne, ifl, a
 double precision :: msil, mgra, rshift, emod(1:nemod), coemod(nemod)
-double precision :: bxs(0:ngrain,nemod), cgrain(ngrain), bener(1:nemod)
+double precision :: bxs(0:ngrain,nemod), cgrain(ngrain), bener(nemod)
 double precision :: zfac
 real :: ear(0:ne), param(num_param), photar(ne)
 logical :: startup=.true.
@@ -31,8 +31,8 @@ version='0.1'
   print *, '!! ISMdust is best as a template for absorption edges, not continuum !!'
   print *, '##-------------------------------------------------------------------##'
   print *, ' '
-  call read_cross_sections_ismdust(nemod,bxs,ifl)
-  call create_energy_grid_ismdust(1.d1,1.d4,bener,nemod) !Cross section grid
+  call read_cross_sections_ismdust(nemod,bxs,ifl,bener)
+  !call create_energy_grid_ismdust(1.d1,1.d4,bener,nemod) !Cross section grid
   startup=.false.  
  endif
 ! Model parameters
@@ -47,7 +47,7 @@ call map_to_grid_ismdust(dble(ear),ne,emod,nemod,photar,coemod,ifl)
 return
 end subroutine ismdust
 ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++!
-subroutine read_cross_sections_ismdust(bnene,xs,ifl)
+subroutine read_cross_sections_ismdust(bnene,xs,ifl,ener)
 !
 ! This routine reads cross sections and puts them on a given grid
 !
@@ -62,8 +62,8 @@ subroutine read_cross_sections_ismdust(bnene,xs,ifl)
 implicit none
 integer,parameter :: ngrain=1, out_unit=20
 integer :: bnene, ifl, i, j, status
-integer :: nemax(0:ngrain)
-double precision :: ener(0:ngrain,bnene), xs(0:ngrain,bnene)
+integer :: nemax
+double precision :: ener(bnene), xs(0:ngrain,bnene)
 character (*), parameter :: fileloc = 'xs_ext_grid.fits'
 character (*), parameter :: ismreadchat = 'ismdust: reading from '
 character (len=255 + 29) :: filename2 ! len(fileloc)
@@ -77,9 +77,7 @@ logical :: anynull
 character (len=255) :: fgmstr
 external :: fgmstr
 !Number of elements for each grain type cross section.
-do i=0,ngrain
-nemax(i)=24552
-enddo
+nemax=24552
 ! Where do we look for the data?
 ismdust_root = trim(fgmstr('ISMDUSTROOT'))
 if (ismdust_root .EQ. '') then
@@ -98,25 +96,21 @@ call ftgiou(inunit,status)
 call ftopen(inunit,filename2,readwrite,blocksize,status)
 ! Move to the extension 2 (the binary table)
 call ftmahd(inunit,2,hdutype,status)
+
 !Read in one energy grid (column 1)
-do j=1,nemax(i)
 colnum=1
-call ftgcvd(inunit,colnum,j,felem,1,nulld,ener(0,j),anynull,status)
+do j=1,nemax
+call ftgcvd(inunit,colnum,j,felem,1,nulld,ener(j),anynull,status)
 enddo
-!Assign the energy grid to all grain energy grids
-do i=1,ngrain
-do j=1,nemax(i)
-ener(i,j)= ener(0,j)
-enddo
-enddo
+
 !Read in the cross section information
 do i=0,ngrain
-do j=1,nemax(i)
-!call ftgcvd(inunit,colnum,j,felem,1,nulld,xs(i,j),anynull,status)
 colnum=i+2
+do j=1,nemax
 call ftgcvd(inunit,colnum,j,felem,1,nulld,xs(i,j),anynull,status)
 enddo
 enddo
+
 ! Report on errors (done before closing the file in case the error
 ! comes from closing the file). Unfortunately the X-Spec API does not
 ! provide a way to signal an error to the calling code, so a screen
@@ -140,7 +134,7 @@ subroutine extinction_ismdust(msil, mgra, zfac, e1, bnene, coeff, bxs2,cgrain,if
 ! Finally returns the absorption coefficient exp(-tau)
 !
 implicit none
-integer,parameter :: ngrain=2, out_unit=20
+integer,parameter :: ngrain=1, out_unit=20
 integer :: bnene, ifl
 integer :: i, j
 double precision :: msil, mgra, tmp, cgrain(ngrain)
