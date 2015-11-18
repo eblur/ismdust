@@ -32,7 +32,6 @@ version='0.1'
   print *, '##-------------------------------------------------------------------##'
   print *, ' '
   call read_cross_sections_ismdust(nemod,bxs,ifl,bener)
-  !call create_energy_grid_ismdust(1.d1,1.d4,bener,nemod) !Cross section grid
   startup=.false.  
  endif
 ! Model parameters
@@ -224,15 +223,4 @@ stop
 endif
 k=klo
 end subroutine dbinsrch_ismdust
-! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-subroutine create_energy_grid_ismdust(emin,emax,en,nen)
-implicit none
-integer :: i, nen
-double precision :: en(nen)
-double precision :: emin,emax
-!
-do i=1,nen
-en(i)=10**(((log10(emax)-log10(emin))*real(i)/nen)+log10(emin))
-enddo
-!
-end subroutine create_energy_grid_ismdust
+
