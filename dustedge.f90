@@ -13,7 +13,7 @@ integer,parameter :: ngrain=1
 integer,parameter :: nemod=24552 !Number of elements for each cross section.
 integer :: ne, ifl, a
 double precision :: msil, mgra, rshift, emod(1:nemod), coemod(nemod)
-double precision :: bxs(0:ngrain,nemod), cgrain(ngrain+1), bener(nemod)
+double precision :: bxs(0:ngrain,nemod), bener(nemod)
 double precision :: zfac
 real :: ear(0:ne), param(num_param), photar(ne)
 logical :: startup=.true.
@@ -41,7 +41,7 @@ mgra = param(2)
 rshift = param(3)
 zfac = 1.d0/(1.d0+dble(rshift))
 
-call extinction_ismdust(msil, mgra, zfac, emod, nemod, coemod,bxs,cgrain,ifl,bener)
+call extinction_ismdust(msil, mgra, zfac, emod, nemod, coemod,bxs,ifl,bener)
 !
 call map_to_grid_ismdust(dble(ear),ne,emod,nemod,photar,coemod,ifl)
 return
@@ -128,7 +128,7 @@ call ftclos(inunit, status)
 call ftfiou(-1, status)
 end subroutine read_cross_sections_ismdust
 ! ======================================= !
-subroutine extinction_ismdust(msil, mgra, zfac, e1, bnene, coeff, bxs2,cgrain,ifl,bener)
+subroutine extinction_ismdust(msil, mgra, zfac, e1, bnene, coeff, bxs2,ifl,bener)
 !
 ! This is routine that calculates the optical depth given the column densities
 ! Finally returns the absorption coefficient exp(-tau)
@@ -137,17 +137,12 @@ implicit none
 integer,parameter :: ngrain=1, out_unit=20
 integer :: bnene, ifl
 integer :: i, j
-double precision :: msil, mgra, cgrain(ngrain+1)
+double precision :: msil, mgra
 double precision :: bener(0:bnene), bxs2(0:ngrain,bnene), e1(0:bnene)
 double precision :: tau, coeff(bnene)
 double precision :: zfac
 real hphoto, gphoto
 external hphoto, gphoto
-
-
-!Mass column densities (units of 1.e-4 g cm^-2)
- cgrain(1)=msil
- cgrain(2)=mgra
 
 ! Calculates the optical depth and the extinction coefficient exp(-tau)
 e1(0)=(bener(0)*zfac)/1.d3
