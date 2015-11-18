@@ -9,9 +9,12 @@ subroutine ismdust(ear, ne, param, ifl, photar)
 !
 implicit none
 integer,parameter :: num_param = 3
+integer,parameter :: ngrain=2
 integer,parameter :: nemod=24552 !Number of elements for each cross section.
 integer :: ne, ifl, a
-double precision :: msil, mgra, rshift, emod(1:nemod), coemod(nemod), bxs(0:ngrain,nemod), cgrain(ngrain), bener(1:nemod)
+double precision :: msil, mgra, rshift, emod(1:nemod), coemod(nemod)
+double precision :: bxs(0:ngrain,nemod), cgrain(ngrain), bener(1:nemod)
+double precision :: zfac
 real :: ear(0:ne), param(num_param), photar(ne)
 logical :: startup=.true.
 character (len=40) version
@@ -36,7 +39,7 @@ version='0.1'
 msil = param(1)
 mgra = param(2)
 rshift = param(3)
-zfac = 1/(1.d0+dble(rshift))
+zfac = 1.d0/(1.d0+dble(rshift))
 
 call extinction_ismdust(msil, mgra, zfac, emod, nemod, coemod,bxs,cgrain,ifl,bener)
 !
@@ -57,14 +60,14 @@ subroutine read_cross_sections_ismdust(bnene,xs,ifl)
 ! <path>/atomic_data/AtomicData.fits
 !
 implicit none
-integer,parameter :: ngrain=2, out_unit=20
+integer,parameter :: ngrain=1, out_unit=20
 integer :: bnene, ifl, i, j, status
 integer :: nemax(0:ngrain)
 double precision :: ener(0:ngrain,bnene), xs(0:ngrain,bnene)
 character (*), parameter :: fileloc = 'xs_ext_grid.fits'
 character (*), parameter :: ismreadchat = 'ismdust: reading from '
 character (len=255 + 29) :: filename2 ! len(fileloc)
-character (len=240) :: local_dir = '/Users/lia/dev/dustedge'
+character (len=240) :: local_dir = '/Users/lia/dev/ismdust/'
 character (len=255) :: ismdust_root = ''
 character (len=len(ismreadchat)+len(filename2)) :: chatmsg = ''
 integer inunit,readwrite,blocksize
@@ -95,14 +98,12 @@ call ftgiou(inunit,status)
 call ftopen(inunit,filename2,readwrite,blocksize,status)
 ! Move to the extension 2 (the binary table)
 call ftmahd(inunit,2,hdutype,status)
-!Read one energy grid (column 1)
-do i=0, 1
+!Read in one energy grid (column 1)
 do j=1,nemax(i)
 colnum=1
-call ftgcvd(inunit,colnum,j,felem,1,nulld,ener(i,j),anynull,status)
+call ftgcvd(inunit,colnum,j,felem,1,nulld,ener(0,j),anynull,status)
 enddo
-enddo
-!Assign the energy grid to all ion energy grids
+!Assign the energy grid to all grain energy grids
 do i=1,ngrain
 do j=1,nemax(i)
 ener(i,j)= ener(0,j)
@@ -112,7 +113,8 @@ enddo
 do i=0,ngrain
 do j=1,nemax(i)
 !call ftgcvd(inunit,colnum,j,felem,1,nulld,xs(i,j),anynull,status)
-call ftgcvd(inunit,i+2,j,felem,1,nulld,xs(i,j),anynull,status)
+colnum=i+2
+call ftgcvd(inunit,colnum,j,felem,1,nulld,xs(i,j),anynull,status)
 enddo
 enddo
 ! Report on errors (done before closing the file in case the error
@@ -138,10 +140,10 @@ subroutine extinction_ismdust(msil, mgra, zfac, e1, bnene, coeff, bxs2,cgrain,if
 ! Finally returns the absorption coefficient exp(-tau)
 !
 implicit none
-integer,parameter :: grain=2, out_unit=20
+integer,parameter :: ngrain=2, out_unit=20
 integer :: bnene, ifl
 integer :: i, j
-double precision :: msil, mgra, tmp, cgrain(grain)
+double precision :: msil, mgra, tmp, cgrain(ngrain)
 double precision :: bener(0:bnene), bxs2(0:ngrain,bnene), e1(0:bnene)
 double precision :: tau, coeff(bnene)
 double precision :: zfac
@@ -150,8 +152,8 @@ external hphoto, gphoto
 
 
 !Mass column densities (units of 1.e-4 g cm^-2)
- cion(1)=msil
- cion(2)=mgra
+ cgrain(1)=msil
+ cgrain(2)=mgra
 
 ! Calculates the optical depth and the extinction coefficient exp(-tau)
 e1(0)=(bener(0)*zfac)/1.d3

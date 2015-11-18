@@ -1,4 +1,4 @@
 ismdust       3   0.01    1.e6      ismdust     mul  0
 msil    10^-4    1.0    0.    0.    1E4  1E5    1E-3
-mgra    106-4    1.0    0.    0.    1E4  1E5    1E-3
+mgra    10^-4    1.0    0.    0.    1E4  1E5    1E-3
 redshift  " "    0.0    -1.0  0.0  10.   10.    -0.01
