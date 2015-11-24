@@ -15,11 +15,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from astropy.io import fits
-from scipy.integrate import interp1d
+from scipy.interpolate import interp1d
 
 import datetime
-import multiproccesing
+import multiprocessing
 import os
+import sys
 
 ## Requires installation of github.com/eblur/dust
 import dust
@@ -55,20 +56,21 @@ _na     = 50    # number of grain sizes to use in distribution
 ## Astrophysical constants (Carroll & Ostlie)
 _c    = 2.99792458e10  # cm s^-1
 _h    = 6.6260755e-27  # erg s
-_keV  = 1.60217733e-15 # erg
-_angs = 1.e-8          # cm
+_keV  = 1.60217733e-9 # erg/keV
+_angs = 1.e-8          # cm/angs
 _hc   = (_h*_c) / (_keV*_angs) # keV angs
+
 
 ## Final energy grid to use 
 ## NOTE: ismdust model will break if you change the number of elements in the grid
 _dangs = 0.005
-_AGRID = np.arange(1.0,130.0,__dangs) # wavelength [angs]
+_AGRID = np.arange(1.0,130.0,_dangs) # wavelength [angs]
 _EGRID = _hc / (_AGRID[::-1])       # keV
 _FINAL_FILE = 'xs_ext_grid.fits'
 
 print("Creating a final energy grid of length %d" % (len(_EGRID)) )
 
-_egrid_lores = np.logspace(0.05, 12.0, 100.0)
+_egrid_lores = np.logspace(-1.3, 1.1, 100.0)
 
 # Energy grids for particular edges
 _ANGSTROMS_OK   = np.linspace(22.0, 28.0, 1200)
@@ -129,7 +131,7 @@ def _write_all_xs_fits(filename, egrid, xs_ext, xs_sca, params, clobber=True):
 def _dustspec(params):
     amin, amax, p, rho, mdust, gtype = params
     radii = dust.Dustdist(rad=np.linspace(amin,amax,_na), p=p, rho=rho)
-    return dust.Dustspectrum(md=mdust, rad=radii)
+    return dust.Dustspectrum(md=_mdust, rad=radii)
 
 def _tau_scat_E( E, params ):
     amin, amax, p, rho, mdust, gtype = params
@@ -148,9 +150,12 @@ def silicate_xs( nproc=4 ):
     for edge in [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi]:
         egrid_sil = _insert_edge_grid(egrid_sil, _hc/edge[::-1])
     
+    print(egrid_sil)
+    
     sil_params = [_amin_s, _amax_s, _p_s, _rho_s, _mdust, 'Silicate']
-    print("Making Silicate cross section with\n\tamin=%.3d\n\tamax=%.3d\n\tp=%.2d\n\trho=%.2d" % sil_params)
-    print("Output will be sent to %s" % (_silfile))
+    print("Making Silicate cross section with\n\tamin=%.3f\n\tamax=%.3f\n\tp=%.2f\n\trho=%.2f" \
+          % (_amin_s, _amax_s, _p_s, _rho_s) )
+    print("Output will be sent to %s" % (_outdir+_silfile))
     
     """
     def _tau_sca(E):
@@ -166,8 +171,8 @@ def silicate_xs( nproc=4 ):
     ext_sil = pool.map(_tau_ext, egrid_sil)
     pool.close()"""
     
-    Ksca_sil = ss.Kappascat(E=egrid_gra, dist=_dustspec(sil_params), scatm=ss.makeScatmodel('Mie','Silicate'))
-    Kext_sil = ss.Kappaext(E=egrid_gra, dist=_dustspec(sil_params), scatm=ss.makeScatmodel('Mie','Silicate'))
+    Ksca_sil = ss.Kappascat(E=egrid_sil, dist=_dustspec(sil_params), scatm=ss.makeScatmodel('Mie','Silicate'))
+    Kext_sil = ss.Kappaext(E=egrid_sil, dist=_dustspec(sil_params), scatm=ss.makeScatmodel('Mie','Silicate'))
     
     sca_sil = Ksca_sil.kappa * _mdust
     ext_sil = Kext_sil.kappa * _mdust
@@ -182,8 +187,9 @@ def graphite_xs( nproc=4 ):
     egrid_gra = _insert_edge_grid(egrid_gra, _hc/_ANGSTROMS_OK[::-1])
     
     gra_params = [_amin_g, _amax_g, _p_g, _rho_g, _mdust, 'Graphite']
-    print("Making Graphite cross section with\n\tamin=%.3d\n\tamax=%.3d\n\tp=%.2d\n\trho=%.2d" % gra_params)
-    print("Output will be sent to %s" % (_grafile))
+    print("Making Graphite cross section with\n\tamin=%.3f\n\tamax=%.3f\n\tp=%.2f\n\trho=%.2f" \
+          % (_amin_g, _amax_g, _p_g, _rho_g))
+    print("Output will be sent to %s" % (_outdir+_grafile))
     
     """
     def _tau_sca(E):
@@ -209,12 +215,12 @@ def graphite_xs( nproc=4 ):
     def _smooth_xs(esmooth, xs, pslope):
         ipow   = np.where(egrid_gra >= esmooth)[0] # closest value to the desired esmooth value
         result = np.copy(xs)
-        result[ipow] = xs[ipow[0]] * np.power(egrid_gra[ipow]/egrid_gra[ipow[0]])
+        result[ipow] = xs[ipow[0]] * np.power(egrid_gra[ipow]/egrid_gra[ipow[0]], pslope)
         return result
     
-    if _smooth_graphite_xs = True:
+    if _smooth_graphite_xs:
         ESMOOTH, PSCA, PABS = 1.0, -2.0, -2.9 # determined by hand
-        print("Smoothing Graphite cross section with\n\tp=%.2d (scattering)\n\tp=%.2d (absorption)" % (PSCA,PABS))
+        print("Smoothing Graphite cross section with\n\tp=%.2f (scattering)\n\tp=%.2f (absorption)" % (PSCA,PABS))
         new_sca_gra = _smooth_xs(ESMOOTH, sca_gra, PSCA)
         new_abs_gra = _smooth_xs(ESMOOTH, ext_gra-sca_gra, PABS)
         new_ext_gra = new_sca_gra + new_abs_gra
@@ -227,8 +233,8 @@ def graphite_xs( nproc=4 ):
 ##-------------- Combine both into one fits file --------------##
 
 def make_xs_fits(clobber=True):
-    sil = Xscat(_outdir+_silfile)
-    gra = Xscat(_outdir+_grafile)
+    sil = Xsect(_outdir+_silfile)
+    gra = Xsect(_outdir+_grafile)
     
     col1 = fits.Column(name='energy', format='E', array=_EGRID*1.e3) # units of eV
     col2 = fits.Column(name='sil_ext', format='E', array=sil(_EGRID))
@@ -251,16 +257,16 @@ def make_xs_fits(clobber=True):
 ##-------------- Main file execution ---------------------------##
 
 if __name__ == '__main__':
-    sil=False, gra=False, combine=False
-    args = os.argv[1:]
+    args = sys.argv
+    print os.environ['PYTHONPATH']
     if 'sil' in args:
-        print('silicate on')
-        #silicate_xs()
+        #print('silicate on')
+        silicate_xs()
     if 'gra' in args:
-        print('graphite on')
-        #graphite_xs()
+        #print('graphite on')
+        graphite_xs()
     if 'combine' in args:
-        print('combine on')
-        #make_xs_fits()
+        #print('combine on')
+        make_xs_fits()
 
 

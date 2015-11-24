@@ -10,7 +10,7 @@ subroutine ismdust(ear, ne, param, ifl, photar)
 implicit none
 integer,parameter :: num_param = 3
 integer,parameter :: ngrain=1
-integer,parameter :: nemod=24552 !Number of elements for each cross section.
+integer,parameter :: nemod=25800 !Number of elements for each cross section.
 integer :: ne, ifl, a
 double precision :: msil, mgra, rshift, emod(1:nemod), coemod(nemod)
 double precision :: bxs(0:ngrain,nemod), bener(nemod)
@@ -76,7 +76,7 @@ logical :: anynull
 character (len=255) :: fgmstr
 external :: fgmstr
 !Number of elements for each grain type cross section.
-nemax=24552
+nemax=25800
 ! Where do we look for the data?
 ismdust_root = trim(fgmstr('ISMDUSTROOT'))
 if (ismdust_root .EQ. '') then
