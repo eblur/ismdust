@@ -1,0 +1,5 @@
+FeLedge(1, powerlaw(1))
+ idx  param             tie-to  freeze         value         min         max
+  1  powerlaw(1).norm       0     0         10.08723           0       1e+10  
+  2  powerlaw(1).PhoIndex   0     0               -2          -2           9  
+  3  FeLedge(1).md          0     0        0.5248527           0        1000  
