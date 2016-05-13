@@ -55,8 +55,7 @@ subroutine read_cross_sections_ismdust(bnene,xs,ifl,ener)
 ! the setting of the local_dir parameter below (which should be
 ! changed to match the location of the data file). The path -
 ! however it is given - should point to the location that contains
-! the atomic_data/ directory - i.e. it loads
-! <path>/atomic_data/AtomicData.fits
+! the dust extinction templates, i.e. /path/to/ismdust/edge_files/
 !
 implicit none
 integer,parameter :: ngrain=1, out_unit=20
@@ -66,7 +65,7 @@ double precision :: ener(bnene), xs(0:ngrain,bnene)
 character (*), parameter :: fileloc = 'xs_ext_grid.fits'
 character (*), parameter :: ismreadchat = 'ismdust: reading from '
 character (len=255 + 29) :: filename2 ! len(fileloc)
-character (len=240) :: local_dir = '/Users/lia/dev/ismdust/edge_files/'
+character (len=240) :: local_dir = './'
 character (len=255) :: ismdust_root = ''
 character (len=len(ismreadchat)+len(filename2)) :: chatmsg = ''
 integer inunit,readwrite,blocksize
