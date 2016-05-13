@@ -65,7 +65,7 @@ double precision :: ener(bnene), xs(0:ngrain,bnene)
 character (*), parameter :: fileloc = 'xs_ext_grid.fits'
 character (*), parameter :: ismreadchat = 'ismdust: reading from '
 character (len=255 + 29) :: filename2 ! len(fileloc)
-character (len=240) :: local_dir = './'
+character (len=240) :: local_dir = './edge_files/'
 character (len=255) :: ismdust_root = ''
 character (len=len(ismreadchat)+len(filename2)) :: chatmsg = ''
 integer inunit,readwrite,blocksize
