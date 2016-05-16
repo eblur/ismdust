@@ -12,7 +12,6 @@ To download, use git to create an ismdust folder:
 
 Enter the ismdust directory and start XSPEC
 
-    xspec
     XSPEC12> initpackage ismdust lmodel_ismdust.dat .
     XSPEC12> exit
 
@@ -33,7 +32,6 @@ Set an environment variable to point to the location of the Fe-L edge templates:
 
 When you want to invoke the model, use the require function in ISIS to load the model.
 
-    isis
     isis> require("FeLedge");
 
 To invoke the model:
