@@ -23,6 +23,10 @@ Now, when you want to load the ISMDUST model in XSPEC, load the correct library.
 
     XSPEC12> load libismdust.dylib
     XSPEC12> mo ismdust*pow
+    
+Try the test file to make sure it's working.
+
+    XSPEC12> @test.xcm
 
 ## Setup for Fe-L edge fits with ISIS (Interactive Spectral Interpretation System) models
 
