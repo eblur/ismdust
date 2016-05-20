@@ -6,7 +6,7 @@ http://arxiv.org/abs/1602.01100
 
 To download, use git to create an ismdust folder:
 
-    git clone git@github.com:eblur/ismdust.git ismdust
+        git clone https://github.com/eblur/ismdust.git ismdust
 
 ## Setup for ISMdust
 
@@ -19,6 +19,10 @@ Finally, set an environment variable to point to location of ismdust, e.g.
 
     export ISMDUSTROOT=/path/to/ismdust/
 
+Now, when you want to load the ISMDUST model in XSPEC, load the correct library. The following example loads ismdust and then applies the extinction model to a power law component:
+
+    XSPEC12> load libismdust.dylib
+    XSPEC12> mo ismdust*pow
 
 ## Setup for Fe-L edge fits with ISIS (Interactive Spectral Interpretation System) models
 
