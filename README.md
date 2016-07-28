@@ -28,11 +28,29 @@ Try the test file to make sure it's working.
 
     XSPEC12> @test.xcm
 
+## Setup for ismdust fits with ISIS (Interactive Spectral Interpretation System) models
+
+Add a line to your .isisrc file
+
+    add_to_isis_load_path("/path/to/ismdust/ismdust_isis");
+
+Set an environment variable (same way you would for the XSPEC model)
+
+    export ISMDUSTROOT=/path/to/ismdust/
+
+When you want to invoke the model, use the require function in ISIS to load ismdust
+
+    isis> require("ismdust");
+
+To set up the model extinction model with a power law continuum, for example, do:
+
+    isis> fit_fun("ismdust(1, powerlaw(1))");
+
 ## Setup for Fe-L edge fits with ISIS (Interactive Spectral Interpretation System) models
 
 Add a line to your .isisrc file
 
-    add_to_isis_load_path("/path/to/ismdust");
+    add_to_isis_load_path("/path/to/ismdust/ismdust_isis");
 
 Set an environment variable to point to the location of the Fe-L edge templates:
 
