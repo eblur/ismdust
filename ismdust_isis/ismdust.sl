@@ -52,3 +52,61 @@ define ismdust_defaults(i)
 add_slang_function ("ismdust", ["sil_md","gra_md"]);
 set_function_category("ismdust", ISIS_FUN_OPERATOR);
 set_param_default_hook("ismdust", "ismdust_defaults");
+
+%%------- Absorption only model
+
+define ismdust_abs_fit(lo, hi, par, fun)
+{
+    variable sil_md   = par[0];
+    variable gra_md   = par[1];
+
+    variable Angs = 0.5*(lo+hi);
+    variable tau  = sil_md * interpol(Angs,sil_ext.wavel,sil_ext.tau_abs) +
+                    gra_md * interpol(Angs,gra_ext.wavel,gra_ext.tau_abs);
+
+    return fun * exp(-tau);
+}
+
+define ismdust_abs_defaults(i)
+{
+    switch(i)
+    { case 0: % sil_md
+    return ( 0.6, 0, 0, 10000 );
+    }
+    { case 1: % gra_md
+    return ( 0.4, 0, 0, 10000 );
+    }
+}
+
+add_slang_function ("ismdust_abs", ["sil_md","gra_md"]);
+set_function_category("ismdust_abs", ISIS_FUN_OPERATOR);
+set_param_default_hook("ismdust_abs", "ismdust_abs_defaults");
+
+%%------- Scattering only model
+
+define ismdust_sca_fit(lo, hi, par, fun)
+{
+    variable sil_md   = par[0];
+    variable gra_md   = par[1];
+
+    variable Angs = 0.5*(lo+hi);
+    variable tau  = sil_md * interpol(Angs,sil_ext.wavel,sil_ext.tau_sca) +
+                    gra_md * interpol(Angs,gra_ext.wavel,gra_ext.tau_sca);
+
+    return fun * exp(-tau);
+}
+
+define ismdust_sca_defaults(i)
+{
+    switch(i)
+    { case 0: % sil_md
+    return ( 0.6, 0, 0, 10000 );
+    }
+    { case 1: % gra_md
+    return ( 0.4, 0, 0, 10000 );
+    }
+}
+
+add_slang_function ("ismdust_sca", ["sil_md","gra_md"]);
+set_function_category("ismdust_sca", ISIS_FUN_OPERATOR);
+set_param_default_hook("ismdust_sca", "ismdust_abs_defaults");
