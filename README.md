@@ -83,7 +83,7 @@ Follow the instructions above to set your `ISMDUSTROOT` environment variable
 
 Now install the local model
 
-      XSPEC12> initpackage olivineabs lmodel_olivineabs.dat .
+    XSPEC12> initpackage olivineabs lmodel_olivineabs.dat .
 
 To load the model in XSPEC:
 
