@@ -160,7 +160,6 @@ do i=1,nne
   nflux(i)=0.
   call dbinsrch_olivine(new_en(i-1),bmin,old_en,one+1)
   call dbinsrch_olivine(new_en(i),bmax,old_en,one+1)
-  print *, old_en(bmin), new_en(i-1), new_en(i), old_en(bmax+1)
   !bmin = bmin-1
   !bmax = bmax-1
   ! Linear interpolation
@@ -170,12 +169,10 @@ do i=1,nne
     else if(new_en(i).gt.old_en(one))then
       s=real(old_flu(one))
     else
-      do j=2,one
-        if(new_en(i).gt.old_en(j-1).and.new_en(i).le.old_en(j))then
-          etemp2=(new_en(i)+new_en(i-1))/2
-          s=old_flu(j-1)+(old_flu(j)-old_flu(j-1))*(etemp2-old_en(j-1))/(old_en(j)-old_en(j-1))
-          endif
-        enddo
+      j = bmax+1
+      etemp2=(new_en(i)+new_en(i-1))/2
+      print *, old_en(j-1), old_en(bmin), new_en(i-1), new_en(i), old_en(bmax+1), old_en(j)
+      s = old_flu(j-1)+(old_flu(j)-old_flu(j-1))*(etemp2-old_en(j-1))/(old_en(j)-old_en(j-1))
     endif
   ! Average (integral)
   else
@@ -185,7 +182,7 @@ do i=1,nne
       stemp=stemp+(old_flu(k))*(old_en(k)-old_en(k-1))
       etemp=etemp+(old_en(k)-old_en(k-1))
       enddo
-    s=real(stemp/etemp)
+    s=1. !real(stemp/etemp)
     endif
   nflux(i)=real(s)
   enddo
