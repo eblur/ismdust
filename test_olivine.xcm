@@ -1,4 +1,4 @@
-lmod ismdust $::env(ISMDUSTROOT)
+lmod olivineabs $::env(ISMDUSTROOT)
 cpd /xw
 energies 0.1 10. 1000 log
 
@@ -9,10 +9,9 @@ xsect bcmc
 cosmo 70 0 0.73
 xset delta 0.01
 systematic 0
-model  powerlaw*ismdust
+model  powerlaw*olivineabs
               2       0.01         -3         -2          9         10
               1       0.01          0          0      1e+20      1e+24
-              1      0.001          0          0      10000     100000
               1      0.001          0          0      10000     100000
               0      -0.01         -1          0         10         10
 
