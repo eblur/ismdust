@@ -1,3 +1,3 @@
-olivineabs       3   0.01    1.e6      olivineabs     mul  0
+olivineabs       2   0.01    1.e6      olivineabs     mul  0
 moliv    10^-4    1.0    0.    0.    1E4  1E5    1E-3
 redshift  " "    0.0    -1.0  0.0  10.   10.    -0.01

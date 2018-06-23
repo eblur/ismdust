@@ -102,6 +102,7 @@ enddo
 colnum=2
 do j=1,nemax
 call ftgcvd(inunit,colnum,j,felem,1,nulld,xabs(j),anynull,status)
+print *, xabs(j), ener(j)
 enddo
 
 ! Report on errors (done before closing the file in case the error
