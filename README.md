@@ -8,7 +8,7 @@ To download, use git to create an ismdust folder:
 
         git clone https://github.com/eblur/ismdust.git ismdust
 
-## Setup for ISMdust
+## XSPEC setup
 
 Enter the ismdust directory and start XSPEC
 
@@ -23,12 +23,12 @@ Now, when you want to load the ISMDUST model in XSPEC, load the correct library.
 
     XSPEC12> load libismdust.dylib
     XSPEC12> mo ismdust*pow
-    
+
 Try the test file to make sure it's working.
 
     XSPEC12> @test.xcm
 
-## Setup for ismdust fits with ISIS (Interactive Spectral Interpretation System) models
+## ISIS (Interactive Spectral Interpretation System) setup
 
 Add a line to your .isisrc file
 
@@ -44,7 +44,31 @@ When you want to invoke the model, use the require function in ISIS to load ismd
 
 To set up the model extinction model with a power law continuum, for example, do:
 
+    isis> require("ismdust");
     isis> fit_fun("ismdust(1, powerlaw(1))");
+
+**For absorption component only**
+
+    isis> require("ismdust");
+    isis> fit_fun("ismdust_abs(1, powerlaw(1))");
+
+**For scattering component only**
+
+        isis> require("ismdust");
+        isis> fit_fun("ismdust_sca(1, powerlaw(1))");
+
+See `ismdust_isis/test_ismdust.sl`
+
+### For Silicate absorption with Olivine Fe K cross-section from Rogantini et al. (2018)
+
+Use the same set up instructions as above.
+
+To run the model with a power law continuum, for example, do:
+
+  isis> require("olivineabs");
+  isis> fit_fun("olivineabs(1, powerlaw(1))");
+
+See also `ismdust_isis/test_olivine.sl`
 
 ## Setup for Fe-L edge fits with ISIS (Interactive Spectral Interpretation System) models
 
