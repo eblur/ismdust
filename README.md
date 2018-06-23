@@ -33,17 +33,17 @@ parameter in ISMdust to 1.67.
     redshift : redshift of the obscuring dust (XSPEC only)
       default = 0.0
 
-The default mixture of 60%/40% silicate/graphite is described in
+The default mixture of 60% / 40% silicate / graphite is described in
 [Corrales et al. (2016)](http://arxiv.org/abs/1602.01100).
 Please cite this paper if you use this model.
 
-**olivineabs model parameters**
+**OlivineAbs model parameters**
 
-  olv_md : dust mass column for Olivine grains in units of 1.e-4
-    default = 1.0
+    olv_md : dust mass column for Olivine grains in units of 1.e-4
+      default = 1.0
 
-  redshift : redshift of the obscuring dust (XSPEC only)
-    default = 0.0
+    redshift : redshift of the obscuring dust (XSPEC only)
+      default = 0.0
 
 A simple model for olivine absorption that uses the silicate absorption model
 from ISMdust with the [Rogantini et al. (2018)](http://adsabs.harvard.edu/abs/2018A%26A...609A..22R)
@@ -51,7 +51,9 @@ cross-section for the Fe K edge incorporated.
 Please cite both Corrales et al. (2016) and Rogantini et al. (2018)
 if you use this model.
 
-## XSPEC setup
+## XSPEC installation
+
+### ISMdust setup
 
 Enter the ismdust directory and start XSPEC
 
@@ -74,7 +76,7 @@ Try the test file to make sure it's working.
 
     XSPEC12> @test.xcm
 
-### For Silicate absorption with Olivine Fe K cross-section
+### OlivineAbs setup
 
 Follow the instructions above to set your `ISMDUSTROOT` environment variable
 (and `LMODDIR`, if you choose).
@@ -92,7 +94,9 @@ Try the test file to make sure it's working.
 
     XSPEC12> @test_olivine.xcm
 
-## ISIS (Interactive Spectral Interpretation System) setup
+## ISIS (Interactive Spectral Interpretation System) installation
+
+### ISMdust setup
 
 Add a line to your .isisrc file
 
@@ -123,7 +127,7 @@ To set up the model extinction model with a power law continuum, for example, do
 
 See `ismdust_isis/test_ismdust.sl`
 
-### For Silicate absorption with Olivine Fe K cross-section
+### OlivineAbs setup
 
 Use the same set up instructions as above.
 
