@@ -169,20 +169,16 @@ do i=1,nne
     else if(new_en(i).gt.old_en(one))then
       s=real(old_flu(one))
     else
-      j = bmax+1
-      etemp2=(new_en(i)+new_en(i-1))/2
-      print *, old_en(j-1), old_en(bmin), new_en(i-1), new_en(i), old_en(bmax+1), old_en(j)
-      s = old_flu(j-1)+(old_flu(j)-old_flu(j-1))*(etemp2-old_en(j-1))/(old_en(j)-old_en(j-1))
+      etemp2 = (new_en(i)+new_en(i-1))/2
+      !print *, old_en(bmax), old_en(bmin), new_en(i-1), new_en(i), old_en(bmax+1), old_en(bmax+1)
+      s = old_flu(bmax)+(old_flu(bmax+1)-old_flu(bmax))*(etemp2-old_en(bmax))/(old_en(bmax+1)-old_en(bmax))
     endif
   ! Average (integral)
   else
-    stemp=0.d0
-    etemp=0.d0
-    do k=bmin,bmax
-      stemp=stemp+(old_flu(k))*(old_en(k)-old_en(k-1))
-      etemp=etemp+(old_en(k)-old_en(k-1))
-      enddo
-    s=1. !real(stemp/etemp)
+    stemp = 0.d0
+    etemp = 0.d0
+    print *, old_en(bmin), new_en(i-1), new_en(i), old_en(bmax+1)
+    s = old_flu(bmin)+(old_flu(bmax+1)-old_flu(bmin))*(etemp2-old_en(bmin))/(old_en(bmax+1)-old_en(bmin))
     endif
   nflux(i)=real(s)
   enddo
