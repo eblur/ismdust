@@ -11,7 +11,7 @@ subroutine olivineabs(ear, ne, param, ifl, photar)
 !
 implicit none
 integer,parameter :: num_param = 2
-integer,parameter :: nemod=25800 !Number of elements for each cross section.
+integer,parameter :: nemod=13047 !Number of elements for each cross section.
 integer :: ne, ifl, a
 double precision :: moliv, rshift, emod(1:nemod), coemod(nemod)
 double precision :: bxs(nemod), bener(nemod)
@@ -71,8 +71,7 @@ integer :: felem=1, nulld=0
 logical :: anynull
 character (len=255) :: fgmstr
 external :: fgmstr
-!Number of elements for each grain type cross section.
-nemax=25800
+nemax=13047 !Number of elements for each grain type cross section.
 ! Where do we look for the data?
 ismdust_root = trim(fgmstr('ISMDUSTROOT'))
 if (ismdust_root .EQ. '') then
@@ -95,14 +94,14 @@ call ftmahd(inunit,2,hdutype,status)
 !Read in one energy grid (column 1)
 colnum=1
 do j=1,nemax
-call ftgcvd(inunit,colnum,j,felem,1,nulld,ener(j),anynull,status)
+  call ftgcvd(inunit,colnum,j,felem,1,nulld,ener(j),anynull,status)
 enddo
 
-!Read in the absorption cross section information
-colnum=2
+!Read in the absorption cross section information (column 3)
+colnum=3
 do j=1,nemax
-call ftgcvd(inunit,colnum,j,felem,1,nulld,xabs(j),anynull,status)
-print *, xabs(j), ener(j)
+  call ftgcvd(inunit,colnum,j,felem,1,nulld,xabs(j),anynull,status)
+  !print *, xabs(j), ener(j)
 enddo
 
 ! Report on errors (done before closing the file in case the error
