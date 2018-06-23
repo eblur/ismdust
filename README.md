@@ -54,8 +54,8 @@ To set up the model extinction model with a power law continuum, for example, do
 
 **For scattering component only**
 
-        isis> require("ismdust");
-        isis> fit_fun("ismdust_sca(1, powerlaw(1))");
+    isis> require("ismdust");
+    isis> fit_fun("ismdust_sca(1, powerlaw(1))");
 
 See `ismdust_isis/test_ismdust.sl`
 
@@ -65,25 +65,18 @@ Use the same set up instructions as above.
 
 To run the model with a power law continuum, for example, do:
 
-  isis> require("olivineabs");
-  isis> fit_fun("olivineabs(1, powerlaw(1))");
+    isis> require("olivineabs");
+    isis> fit_fun("olivineabs(1, powerlaw(1))");
 
 See also `ismdust_isis/test_olivine.sl`
 
-## Setup for Fe-L edge fits with ISIS (Interactive Spectral Interpretation System) models
-
-Add a line to your .isisrc file
-
-    add_to_isis_load_path("/path/to/ismdust/ismdust_isis");
+### Fe-L edge fits with ISIS
 
 Set an environment variable to point to the location of the Fe-L edge templates:
 
     export FEPATH=/path/to/ismdust/ismdust_isis/
 
-When you want to invoke the model, use the require function in ISIS to load the model.
-
-    isis> require("FeLedge");
-
 To invoke the model:
 
+    isis> require("FeLedge");
     isis> fit_fun("FeLedge(1, powerlaw(1))");

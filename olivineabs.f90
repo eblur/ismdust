@@ -150,7 +150,7 @@ end subroutine absorption_olivine
 subroutine map_to_grid_olivine(new_en,nne,old_en, one, nflux, old_flu,ifl)
 ! This routine maps to a given grid
 implicit none
-integer :: i, j, k, one, nne, bmin, bmax,ifl
+integer :: i, j, k, one, nne, bmin, bmax, ifl, btemp
 double precision :: new_en(0:nne)
 double precision :: old_en(one), old_flu(one)
 double precision :: etemp, s
@@ -160,17 +160,19 @@ do i=1,nne
   nflux(i)=0.
   call dbinsrch_olivine(new_en(i-1),bmin,old_en,one+1)
   call dbinsrch_olivine(new_en(i),bmax,old_en,one+1)
-  !bmin = bmin-1
-  !bmax = bmax-1
+  etemp = (new_en(i)+new_en(i-1))/2
   ! Linear interpolation
-  if (bmin.eq.bmax.and.new_en(i).le.old_en(1)) then
+  if (bmin.eq.bmax) then
+    if (new_en(i).le.old_en(1)) then
       s = real(old_flu(1))
-  else if (bmin.eq.bmax.and.new_en(i).gt.old_en(one)) then
+    else if (new_en(i).gt.old_en(one)) then
       s = real(old_flu(one))
+    else
+      s = old_flu(bmin) + (old_flu(bmax+1)-old_flu(bmin)) * (etemp-old_en(bmin)) / (old_en(bmax+1)-old_en(bmin))
+      endif
   else
-    print *, old_en(bmin), new_en(i-1), new_en(i), old_en(bmax+1)
-    etemp = (new_en(i)+new_en(i-1))/2
-    s = old_flu(bmin) + (old_flu(bmax+1)-old_flu(bmin)) * (etemp-old_en(bmin)) / (old_en(bmax+1)-old_en(bmin))
+    call dbinsrch_olivine(etemp,btemp,old_en,one+1)
+    s = old_flu(btemp) + (old_flu(btemp+1)-old_flu(btemp)) * (etemp-old_en(btemp)) / (old_en(btemp+1)-old_en(btemp))
     endif
   nflux(i)=real(s)
   enddo
