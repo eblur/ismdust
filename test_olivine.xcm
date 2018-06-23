@@ -1,4 +1,4 @@
-load libolivineabs.dylib
+lmod olivineabs $::env(ISMDUSTROOT)
 cpd /xw
 energies 0.1 10. 1000 log
 
