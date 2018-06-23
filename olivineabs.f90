@@ -151,17 +151,18 @@ subroutine map_to_grid_olivine(new_en,nne,old_en, one, nflux, old_flu,ifl)
 ! This routine maps to a given grid
 implicit none
 integer :: i, j, k, one, nne, bmin, bmax,ifl
-double precision :: new_en(nne)
+double precision :: new_en(0:nne)
 double precision :: old_en(one), old_flu(one)
 double precision :: stemp,etemp, s, etemp2
 real :: nflux(nne)
 integer,parameter :: out_unit=20
 do i=1,nne
-  nflux(i)=real(0.d0)
+  nflux(i)=0.
   call dbinsrch_olivine(new_en(i-1),bmin,old_en,one+1)
   call dbinsrch_olivine(new_en(i),bmax,old_en,one+1)
-  bmin = bmin-1
-  bmax = bmax-1
+  print *, old_en(bmin), new_en(i-1), new_en(i), old_en(bmax+1)
+  !bmin = bmin-1
+  !bmax = bmax-1
   ! Linear interpolation
   if (bmin.eq.bmax) then
     if(new_en(i).le.old_en(1))then
