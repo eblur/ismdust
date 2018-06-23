@@ -153,7 +153,7 @@ implicit none
 integer :: i, j, k, one, nne, bmin, bmax,ifl
 double precision :: new_en(0:nne)
 double precision :: old_en(one), old_flu(one)
-double precision :: stemp,etemp, s, etemp2
+double precision :: etemp, s
 real :: nflux(nne)
 integer,parameter :: out_unit=20
 do i=1,nne
@@ -163,22 +163,14 @@ do i=1,nne
   !bmin = bmin-1
   !bmax = bmax-1
   ! Linear interpolation
-  if (bmin.eq.bmax) then
-    if(new_en(i).le.old_en(1))then
-      s=real(old_flu(1))
-    else if(new_en(i).gt.old_en(one))then
-      s=real(old_flu(one))
-    else
-      etemp2 = (new_en(i)+new_en(i-1))/2
-      !print *, old_en(bmax), old_en(bmin), new_en(i-1), new_en(i), old_en(bmax+1), old_en(bmax+1)
-      s = old_flu(bmax)+(old_flu(bmax+1)-old_flu(bmax))*(etemp2-old_en(bmax))/(old_en(bmax+1)-old_en(bmax))
-    endif
-  ! Average (integral)
+  if (bmin.eq.bmax.and.new_en(i).le.old_en(1)) then
+      s = real(old_flu(1))
+  else if (bmin.eq.bmax.and.new_en(i).gt.old_en(one)) then
+      s = real(old_flu(one))
   else
-    stemp = 0.d0
-    etemp = 0.d0
     print *, old_en(bmin), new_en(i-1), new_en(i), old_en(bmax+1)
-    s = old_flu(bmin)+(old_flu(bmax+1)-old_flu(bmin))*(etemp2-old_en(bmin))/(old_en(bmax+1)-old_en(bmin))
+    etemp = (new_en(i)+new_en(i-1))/2
+    s = old_flu(bmin) + (old_flu(bmax+1)-old_flu(bmin)) * (etemp-old_en(bmin)) / (old_en(bmax+1)-old_en(bmin))
     endif
   nflux(i)=real(s)
   enddo
