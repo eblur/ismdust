@@ -13,7 +13,7 @@ implicit none
 integer,parameter :: num_param = 2
 integer,parameter :: nemod=13047 !Number of elements for each cross section.
 integer :: ne, ifl, a
-double precision :: moliv, rshift, emod(0:nemod), coemod(nemod)
+double precision :: moliv, rshift, emod(nemod), coemod(nemod)
 double precision :: bxs(nemod), bener(nemod)
 double precision :: zfac
 real :: ear(0:ne), param(num_param), photar(ne)
@@ -129,20 +129,20 @@ subroutine absorption_olivine(moliv, zfac, e1, bnene, coeff, bxs2,ifl,bener)
 implicit none
 integer,parameter :: out_unit=20
 integer :: bnene, ifl
-integer :: i, j
+integer :: i
 double precision :: moliv
-double precision :: bener(0:bnene), bxs2(bnene), e1(0:bnene)
+double precision :: bener(bnene), bxs2(bnene), e1(bnene)
 double precision :: tau, coeff(bnene)
 double precision :: zfac
 real hphoto, gphoto
 external hphoto, gphoto
 
 ! Calculates the optical depth and the extinction coefficient exp(-tau)
-e1(0)=(bener(0)*zfac)/1.d3
-do i=1,bnene
-e1(i)=(bener(i)*zfac)/1.d3
-tau=moliv * bxs2(i)
-coeff(i)=dexp(-tau)
+e1(1)=(bener(1)*zfac)/1.d3
+do i=2,bnene
+  e1(i)=(bener(i)*zfac)/1.d3
+  tau=moliv * bxs2(i)
+  coeff(i)=dexp(-tau)
 enddo
 
 end subroutine absorption_olivine
