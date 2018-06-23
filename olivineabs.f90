@@ -151,43 +151,43 @@ subroutine map_to_grid_olivine(new_en,nne,old_en, one, nflux, old_flu,ifl)
 ! This routine maps to a given grid
 implicit none
 integer :: i, j, k, one, nne, bmin, bmax,ifl
-double precision :: new_en(0:nne)
-double precision :: old_en(0:one), old_flu(one)
+double precision :: new_en(nne)
+double precision :: old_en(one), old_flu(one)
 double precision :: stemp,etemp, s, etemp2
 real :: nflux(nne)
 integer,parameter :: out_unit=20
 do i=1,nne
-nflux(i)=real(0.d0)
-call dbinsrch_olivine(new_en(i-1),bmin,old_en,one+1)
-call dbinsrch_olivine(new_en(i),bmax,old_en,one+1)
-bmin = bmin-1
-bmax = bmax-1
-! Linear interpolation
-if (bmin.eq.bmax) then
-if(new_en(i).le.old_en(1))then
-s=real(old_flu(1))
-else if(new_en(i).gt.old_en(one))then
-s=real(old_flu(one))
-else
-do j=2,one
-if(new_en(i).gt.old_en(j-1).and.new_en(i).le.old_en(j))then
-etemp2=(new_en(i)+new_en(i-1))/2
-s=old_flu(j-1)+(old_flu(j)-old_flu(j-1))*(etemp2-old_en(j-1))/(old_en(j)-old_en(j-1))
-endif
-enddo
-endif
-! Average (integral)
-else
-stemp=0.d0
-etemp=0.d0
-do k=bmin,bmax
-stemp=stemp+(old_flu(k))*(old_en(k)-old_en(k-1))
-etemp=etemp+(old_en(k)-old_en(k-1))
-enddo
-s=real(stemp/etemp)
-endif
-nflux(i)=real(s)
-enddo
+  nflux(i)=real(0.d0)
+  call dbinsrch_olivine(new_en(i-1),bmin,old_en,one+1)
+  call dbinsrch_olivine(new_en(i),bmax,old_en,one+1)
+  bmin = bmin-1
+  bmax = bmax-1
+  ! Linear interpolation
+  if (bmin.eq.bmax) then
+    if(new_en(i).le.old_en(1))then
+      s=real(old_flu(1))
+    else if(new_en(i).gt.old_en(one))then
+      s=real(old_flu(one))
+    else
+      do j=2,one
+        if(new_en(i).gt.old_en(j-1).and.new_en(i).le.old_en(j))then
+          etemp2=(new_en(i)+new_en(i-1))/2
+          s=old_flu(j-1)+(old_flu(j)-old_flu(j-1))*(etemp2-old_en(j-1))/(old_en(j)-old_en(j-1))
+          endif
+        enddo
+    endif
+  ! Average (integral)
+  else
+    stemp=0.d0
+    etemp=0.d0
+    do k=bmin,bmax
+      stemp=stemp+(old_flu(k))*(old_en(k)-old_en(k-1))
+      etemp=etemp+(old_en(k)-old_en(k-1))
+      enddo
+    s=real(stemp/etemp)
+    endif
+  nflux(i)=real(s)
+  enddo
 end subroutine map_to_grid_olivine
 ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 subroutine dbinsrch_olivine(e,k,ener,n)
