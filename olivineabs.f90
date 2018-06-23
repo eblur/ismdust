@@ -13,7 +13,7 @@ implicit none
 integer,parameter :: num_param = 2
 integer,parameter :: nemod=13047 !Number of elements for each cross section.
 integer :: ne, ifl, a
-double precision :: moliv, rshift, emod(1:nemod), coemod(nemod)
+double precision :: moliv, rshift, emod(0:nemod), coemod(nemod)
 double precision :: bxs(nemod), bener(nemod)
 double precision :: zfac
 real :: ear(0:ne), param(num_param), photar(ne)
