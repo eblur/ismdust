@@ -3,7 +3,7 @@
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! XSPEC local model for olivine absorption edge structure
 ! Contains ISMdust cross-sections for absorption with Fe-K edge for
-! olivine, obtained from Rogantini et al. 2017
+! olivine, obtained from Rogantini et al. 2018
 ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 subroutine olivineabs(ear, ne, param, ifl, photar)
 !
@@ -83,7 +83,7 @@ status=0
 readwrite=0
 blocksize=1
 filename2=trim(ismdust_root) // fileloc
-chatmsg=ismreadchat // filename2
+chatmsg=olivinereadchat // filename2
 call xwrite(chatmsg, 20)
 ! Get an unused Logical Unit Number to use to open the FITS file.
 call ftgiou(inunit,status)
@@ -119,7 +119,7 @@ endif
 ! Close the file and free the unit number
 call ftclos(inunit, status)
 call ftfiou(-1, status)
-end subroutine read_cross_sections_ismdust
+end subroutine read_cross_sections_olivine
 ! ======================================= !
 subroutine absorption_olivine(moliv, zfac, e1, bnene, coeff, bxs2,ifl,bener)
 !
@@ -190,7 +190,7 @@ nflux(i)=real(s)
 enddo
 end subroutine map_to_grid_olivine
 ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-subroutine dbinsrch_olvine(e,k,ener,n)
+subroutine dbinsrch_olivine(e,k,ener,n)
 !
 ! search for energy e in array ener(1:n) and return bin k for
 ! which ener(k).le.e.lt.ener(k+1)
