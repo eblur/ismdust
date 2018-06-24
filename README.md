@@ -8,21 +8,19 @@ To download, use git to create an ismdust folder:
 
         git clone https://github.com/eblur/ismdust.git ismdust
 
-## About the model parameters
+**The following models are provided**
 
-Each model applies the value `exp(-tau md)` to the flux, where tau is the path-integrated
-absorption, scattering, or extinction optical depth and `md` is the
-dust mass column in units of 10^-4 g cm^-2.
++ ISMdust
++ OlivineAbs
++ ISMdust_sca (ISIS only)
++ ISMdust_abs (ISIS only)
++ FeLedge (ISIS only)
 
-To estimate the appropriate dust mass column for a given ISM column (NH),
-one must choose a dust-to-gas mass ratio. For for the Milky Way ISM,
-this value is typically ~0.01.
+## About ISMdust
 
-For example, NH = 10^22 cm^-2 corresponds to NH * m_p (proton mass) * 0.01 =
- 1.67e-4 g cm^-2. One can then set, for example, the `md_sil`
-parameter in ISMdust to 1.67.
-
-**ISMdust model parameters**
+This model provides the extinction (= absorption + scattering) properties for 
+a power law distribution of dust grains using the optical properties for
+dust provided in [Draine (2003)](http://adsabs.harvard.edu/abs/2003ApJ...598.1026D).
 
     sil_md : dust mass column for Silicate in units of 1.e-4
       default = 0.6
@@ -37,7 +35,11 @@ The default mixture of 60% / 40% silicate / graphite is described in
 [Corrales et al. (2016)](http://arxiv.org/abs/1602.01100).
 Please cite this paper if you use this model.
 
-**OlivineAbs model parameters**
+## About OlivineAbs
+
+A model for olivine absorption that uses the silicate absorption model
+from ISMdust with the [Rogantini et al. (2018)](http://adsabs.harvard.edu/abs/2018A%26A...609A..22R)
+cross-section for the Fe K edge incorporated.
 
     olv_md : dust mass column for Olivine grains in units of 1.e-4
       default = 1.0
@@ -45,11 +47,22 @@ Please cite this paper if you use this model.
     redshift : redshift of the obscuring dust (XSPEC only)
       default = 0.0
 
-A simple model for olivine absorption that uses the silicate absorption model
-from ISMdust with the [Rogantini et al. (2018)](http://adsabs.harvard.edu/abs/2018A%26A...609A..22R)
-cross-section for the Fe K edge incorporated.
 Please cite both Corrales et al. (2016) and Rogantini et al. (2018)
 if you use this model.
+
+## About the model parameters
+
+Each model returns `exp(-tau md)`, where tau is the path-integrated
+absorption, scattering, or extinction optical depth and `md` is the
+dust mass column in units of 10^-4 g cm^-2.
+
+To estimate the appropriate dust mass column for a given ISM column (NH),
+one must choose a dust-to-gas mass ratio. For for the Milky Way ISM,
+this value is typically ~0.01.
+
+For example, NH = 10^22 cm^-2 corresponds to NH * m_p (proton mass) * 0.01 =
+ 1.67e-4 g cm^-2. One can then set, for example, the `md_sil`
+parameter in ISMdust to 1.67.
 
 ## XSPEC installation
 
