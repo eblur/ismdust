@@ -163,7 +163,9 @@ def _tau_ext_E( E, params ):
 
 def silicate_xs( nproc=4 ):
     egrid_sil = np.copy(_egrid_lores)
-    for edge in [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]:
+    #region_list = [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]
+    region_list = [_ANGSTROMS_OK]
+    for edge in region_list:
         egrid_sil = _insert_edge_grid(egrid_sil, _hc/edge[::-1])
 
     sil_params = [_amin_s, _amax_s, _p_s, _rho_s, _mdust, 'Silicate']
@@ -190,8 +192,6 @@ def silicate_xs( nproc=4 ):
         md=_mdust, amin=_amin_s, amax=_amax_s, p=_p_s)
 
     # do the calculation piece-by-piece
-    #region_list = [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]
-    region_list = [_ANGSTROMS_OK]
     sil_sca_by_reg = []
     sil_ext_by_reg = []
     for reg in region_list:
