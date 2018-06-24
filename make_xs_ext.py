@@ -9,6 +9,7 @@
 
     Created by: Lia Corrales (lia@space.mit.edu)
     2015.11.18
+    2016.06.25 -- updated for use with eblur/newdust
 """
 
 import numpy as np
@@ -62,23 +63,31 @@ _hc   = (_h*_c) / (_keV*_angs) # keV angs
 
 ## Final energy grid to use
 ## NOTE: ismdust model will break if you change the number of elements in the grid
-_fek_region = np.arange(1.5, 1.91, 0.005) # 5 eV resolution
-_dangs = 0.005
-_AGRID = np.arange(1.0,130.0,_dangs) # wavelength [angs]
-_EGRID = _hc / (_AGRID[::-1])       # keV
+_FeK   = np.arange(1.5, 1.91, 0.005) # 5 eV resolution in Fe K region
+_Atemp = np.arange(1.0,130.0, 0.005) # 5 mAngstrom resolution everywhere else
+_Etemp = _hc / (_Atemp[::-1])   # keV
+
+# Final energy grid (keV)
+_EGRID = np.append(np.append(np.append(_Etemp[_Etemp < _FeK[0]], _FeK),
+    _Etemp[_Etemp > _FeK[-1]]),
+    np.arange(12.5, 100.01, 0.1)) # 100 eV resolution up to 100 keV
+
 _FINAL_FILE = 'xs_ext_grid.fits'
 
 print("Creating a final energy grid of length %d" % (len(_EGRID)) )
 # in the past: 25800
-# now (2018.06.23):
+# now (2018.06.24): 28405
 
-_egrid_lores = np.logspace(-1.3, 1.1, 100.0)
-
+# Low resulotion grids for computing
+# This is for computing the cross-sections, then later
+# we will interpolate those cross-sections onto _EGRID
+_egrid_lores = np.logspace(-1.3, 2.0, 200.0)
 # Energy grids for particular edges
-_ANGSTROMS_OK   = np.linspace(22.0, 28.0, 1200)
-_ANGSTROMS_FeL  = np.linspace(15.0, 21.0, 1200)
-_ANGSTROMS_MgSi = np.linspace(5.0, 11.0, 1200)
-_ANGSTROMS_CK   = np.linspace(35, 48, 2600)
+_ANGSTROMS_OK   = np.linspace(22.0, 28.0, 1200) # 5 mA resolution
+_ANGSTROMS_FeL  = np.linspace(15.0, 21.0, 1200) # 5 mA resolution
+_ANGSTROMS_MgSi = np.linspace(5.0, 11.0, 1200) # 5 mA resolution
+_ANGSTROMS_FeK  = np.linspace(1.5, 1.9, 1200) # 3.3 mA resolution
+_ANGSTROMS_CK   = np.linspace(35, 48, 2600) # 5 mA resolution
 
 ##-------------- Supporting structures and functions -----------------##
 
@@ -149,7 +158,7 @@ def _tau_ext_E( E, params ):
 
 def silicate_xs( nproc=4 ):
     egrid_sil = np.copy(_egrid_lores)
-    for edge in [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi]:
+    for edge in [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]:
         egrid_sil = _insert_edge_grid(egrid_sil, _hc/edge[::-1])
 
     print(egrid_sil)
@@ -186,7 +195,7 @@ def silicate_xs( nproc=4 ):
 
 def graphite_xs( nproc=4 ):
     egrid_gra = np.copy(_egrid_lores)
-    egrid_gra = _insert_edge_grid(egrid_gra, _hc/_ANGSTROMS_OK[::-1])
+    egrid_gra = _insert_edge_grid(egrid_gra, _hc/_ANGSTROMS_CK[::-1])
 
     gra_params = [_amin_g, _amax_g, _p_g, _rho_g, _mdust, 'Graphite']
     print("Making Graphite cross section with\n\tamin=%.3f\n\tamax=%.3f\n\tp=%.2f\n\trho=%.2f" \
