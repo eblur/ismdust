@@ -7,6 +7,17 @@
     Modify the magic numbers at the beginning of this file to change the
         grain size distribution and other dust properties.
 
+    To remake the silicate cross-sections:
+        ./make_xs_ext sil
+    To remake the graphite cross-sections:
+        ./make_xs_ext gra
+
+    To construct the master extinction file for XSPEC model, run each command
+    above, individually, and then run:
+        ./make_xs_ext combine
+    This will make edge_files/xs_ext_grid.fits from the two existing files:
+        edge_files/silicate_xs.fits and edge_files/graphite_xs.fits
+
     Created by: Lia Corrales (lia@space.mit.edu)
     2015.11.18
     2016.06.25 -- updated for use with eblur/newdust
@@ -68,9 +79,8 @@ _Atemp = np.arange(1.0,130.0, 0.005) # 5 mAngstrom resolution everywhere else
 _Etemp = _hc / (_Atemp[::-1])   # keV
 
 # Final energy grid (keV)
-_EGRID = np.append(np.append(np.append(_Etemp[_Etemp < _FeK[0]], _FeK),
-    _Etemp[_Etemp > _FeK[-1]]),
-    np.arange(12.5, 100.01, 0.1)) # 100 eV resolution up to 100 keV
+_EGRID = np.append(np.append(_Etemp[_Etemp < _FeK[0]], _FeK),
+    _Etemp[_Etemp > _FeK[-1]])
 
 _FINAL_FILE = 'xs_ext_grid.fits'
 
@@ -161,7 +171,7 @@ def _tau_ext_E( E, params ):
 
 ##-------------- Compute silicate values --------------##
 
-def silicate_xs( nproc=4 ):
+def silicate_xs():
     egrid_sil = np.copy(_egrid_lores)
     region_list = [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]
     for edge in region_list:
@@ -171,20 +181,6 @@ def silicate_xs( nproc=4 ):
     print("Making Silicate cross section with\n\tamin=%.3f\n\tamax=%.3f\n\tp=%.2f\n\trho=%.2f" \
           % (_amin_s, _amax_s, _p_s, _rho_s) )
     print("Output will be sent to %s" % (_outdir+_silfile))
-
-    """
-    def _tau_sca(E):
-        result = ss.Kappascat(E=E, dist=_dustspec(sil_params), scatm=ss.makeScatmodel('Mie','Silicate'))
-        return result.kappa[0] * _mdust
-
-    def _tau_ext(E):
-        result = ss.Kappaext(E=E, dist=_dustspec(sil_params), scatm=ss.makeScatmodel('Mie','Silicate'))
-        return result.kappa[0] * _mdust
-
-    pool = multiprocessing.Pool(processes=nproc)
-    sca_sil = pool.map(_tau_sca, egrid_sil)
-    ext_sil = pool.map(_tau_ext, egrid_sil)
-    pool.close()"""
 
     sil_comp = newdust.graindist.composition.CmSilicate(rho=_rho_s)
     sil_gpop = newdust.SingleGrainPop('Powerlaw', sil_comp, 'Mie',
@@ -211,7 +207,7 @@ def silicate_xs( nproc=4 ):
 
 ##-------------- Compute graphite values --------------##
 
-def graphite_xs( nproc=4 ):
+def graphite_xs():
     egrid_gra = np.copy(_egrid_lores)
     egrid_CK  = _hc/_ANGSTROMS_CK[::-1]
     egrid_gra = _insert_edge_grid(egrid_gra, egrid_CK)
@@ -220,20 +216,6 @@ def graphite_xs( nproc=4 ):
     print("Making Graphite cross section with\n\tamin=%.3f\n\tamax=%.3f\n\tp=%.2f\n\trho=%.2f" \
           % (_amin_g, _amax_g, _p_g, _rho_g))
     print("Output will be sent to %s" % (_outdir+_grafile))
-
-    """
-    def _tau_sca(E):
-        result = ss.Kappascat(E=E, dist=_dustspec(gra_params), scatm=ss.makeScatmodel('Mie','Graphite'))
-        return result.kappa[0] * _mdust
-
-    def _tau_ext(E):
-        result = ss.Kappascat(E=E, dist=_dustspec(gra_params), scatm=ss.makeScatmodel('Mie','Graphite'))
-        return result.kappa[0]] * _mdust
-
-    pool = multiprocessing.Pool(processes=nproc)
-    sca_gra = pool.map(_tau_sca, egrid_gra)
-    ext_sil = pool.map(_tau_ext, egrid_gra)
-    pool.close()"""
 
     # Have to do the calculation for each orientation
     gra_para = newdust.graindist.composition.CmGraphite(rho=_rho_g, orient='para')
@@ -303,7 +285,7 @@ def make_xs_fits(clobber=True):
     prihdu = fits.PrimaryHDU(header=prihdr)
 
     thdulist = fits.HDUList([prihdu, tbhdu])
-    thdulist.writeto(_outdir+_FINAL_FILE, clobber=clobber)
+    thdulist.writeto(_outdir+_FINAL_FILE, overwrite=clobber)
     return
 
 ##-------------- Main file execution ---------------------------##
