@@ -81,7 +81,7 @@ print("Creating a final energy grid of length %d" % (len(_EGRID)) )
 # Low resulotion grids for computing
 # This is for computing the cross-sections, then later
 # we will interpolate those cross-sections onto _EGRID
-_egrid_lores = np.logspace(-1.3, 2.0, 200.0)
+_egrid_lores = np.logspace(-1.3, 1.1, 100.0)
 # Energy grids for particular edges
 _ANGSTROMS_OK   = np.linspace(22.0, 28.0, 1200) # 5 mA resolution
 _ANGSTROMS_FeL  = np.linspace(15.0, 21.0, 1200) # 5 mA resolution
@@ -111,6 +111,16 @@ def _insert_edge_grid(lores_grid, edge_grid):
     result = np.append(result, lores_grid[lores_grid > emax])
     return result
 
+def _insert_xsect(lores_grid, edge_grid, lores_xsect, edge_xsect):
+    emin = edge_grid[0]
+    emax = edge_grid[-1]
+
+    result = np.array([])
+    result = np.append(result, lores_xsect[lores_grid < emin])
+    result = np.append(result, edge_xsect)
+    result = np.append(result, lores_xsect[lores_grid > emax])
+    return result
+
 def _write_all_xs_fits(filename, egrid, xs_ext, xs_sca, params, clobber=True):
 
     amin, amax, p, rho, mdust, gtype = params
@@ -136,13 +146,8 @@ def _write_all_xs_fits(filename, egrid, xs_ext, xs_sca, params, clobber=True):
     prihdu = fits.PrimaryHDU(header=prihdr)
 
     thdulist = fits.HDUList([prihdu, tbhdu])
-    thdulist.writeto(filename, clobber=clobber)
+    thdulist.writeto(filename, overwrite=clobber)
     return
-
-def _dustspec(params):
-    amin, amax, p, rho, mdust, gtype = params
-    radii = dust.Dustdist(rad=np.linspace(amin,amax,_na), p=p, rho=rho)
-    return dust.Dustspectrum(md=_mdust, rad=radii)
 
 def _tau_scat_E( E, params ):
     amin, amax, p, rho, mdust, gtype = params
@@ -160,8 +165,6 @@ def silicate_xs( nproc=4 ):
     egrid_sil = np.copy(_egrid_lores)
     for edge in [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]:
         egrid_sil = _insert_edge_grid(egrid_sil, _hc/edge[::-1])
-
-    print(egrid_sil)
 
     sil_params = [_amin_s, _amax_s, _p_s, _rho_s, _mdust, 'Silicate']
     print("Making Silicate cross section with\n\tamin=%.3f\n\tamax=%.3f\n\tp=%.2f\n\trho=%.2f" \
@@ -182,11 +185,27 @@ def silicate_xs( nproc=4 ):
     ext_sil = pool.map(_tau_ext, egrid_sil)
     pool.close()"""
 
-    Ksca_sil = ss.Kappascat(E=egrid_sil, dist=_dustspec(sil_params), scatm=ss.makeScatmodel('Mie','Silicate'))
-    Kext_sil = ss.Kappaext(E=egrid_sil, dist=_dustspec(sil_params), scatm=ss.makeScatmodel('Mie','Silicate'))
+    sil_comp = newdust.graindist.composition.CmSilicate(rho=_rho_s)
+    sil_gpop = newdust.SingleGrainPop('Powerlaw', sil_comp, 'Mie',
+        md=_mdust, amin=_amin_s, amax=_amax_s, p=_p_s)
 
-    sca_sil = Ksca_sil.kappa * _mdust
-    ext_sil = Kext_sil.kappa * _mdust
+    # do the calculation piece-by-piece
+    #region_list = [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]
+    region_list = [_ANGSTROMS_OK]
+    sil_sca_by_reg = []
+    sil_ext_by_reg = []
+    for reg in region_list:
+        sil_gpop.calculate_ext(_hc/reg[::-1], unit='kev')
+        sil_sca_by_reg.append(sil_gpop.tau_sca)
+        sil_ext_by_reg.append(sil_gpop.tau_ext)
+
+    sil_gpop.calculate_ext(_egrid_lores, unit='kev')
+    # cobble together the final cross-sections
+    for reg, xsect in zip(region_list, sil_sca_by_reg):
+        sca_sil = _insert_xsect(_egrid_lores, _hc/reg[::-1], sil_gpop.tau_sca, xsect)
+
+    for reg, xsect in zip(region_list, sil_ext_by_reg):
+        ext_sil = _insert_xsect(_egrid_lores, _hc/reg[::-1], sil_gpop.tau_ext, xsect)
 
     _write_all_xs_fits(_outdir+_silfile, egrid_sil, ext_sil, sca_sil, sil_params)
     return
