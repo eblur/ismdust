@@ -163,8 +163,7 @@ def _tau_ext_E( E, params ):
 
 def silicate_xs( nproc=4 ):
     egrid_sil = np.copy(_egrid_lores)
-    #region_list = [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]
-    region_list = [_ANGSTROMS_OK]
+    region_list = [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]
     for edge in region_list:
         egrid_sil = _insert_edge_grid(egrid_sil, _hc/edge[::-1])
 
@@ -214,7 +213,8 @@ def silicate_xs( nproc=4 ):
 
 def graphite_xs( nproc=4 ):
     egrid_gra = np.copy(_egrid_lores)
-    egrid_gra = _insert_edge_grid(egrid_gra, _hc/_ANGSTROMS_CK[::-1])
+    egrid_CK  = _hc/_ANGSTROMS_CK[::-1]
+    egrid_gra = _insert_edge_grid(egrid_gra, egrid_CK)
 
     gra_params = [_amin_g, _amax_g, _p_g, _rho_g, _mdust, 'Graphite']
     print("Making Graphite cross section with\n\tamin=%.3f\n\tamax=%.3f\n\tp=%.2f\n\trho=%.2f" \
@@ -235,11 +235,33 @@ def graphite_xs( nproc=4 ):
     ext_sil = pool.map(_tau_ext, egrid_gra)
     pool.close()"""
 
-    Ksca_gra = ss.Kappascat(E=egrid_gra, dist=_dustspec(gra_params), scatm=ss.makeScatmodel('Mie','Graphite'))
-    Kext_gra = ss.Kappaext(E=egrid_gra, dist=_dustspec(gra_params), scatm=ss.makeScatmodel('Mie','Graphite'))
+    # Have to do the calculation for each orientation
+    gra_para = newdust.graindist.composition.CmGraphite(rho=_rho_g, orient='para')
+    gra_perp = newdust.graindist.composition.CmGraphite(rho=_rho_g, orient='perp')
 
-    sca_gra = Ksca_gra.kappa * _mdust
-    ext_gra = Kext_gra.kappa * _mdust
+    gra_gpop_para = newdust.SingleGrainPop('Powerlaw', gra_para, 'Mie',
+        md=_mdust, amin=_amin_g, amax=_amax_g, p=_p_g)
+    gra_gpop_perp = newdust.SingleGrainPop('Powerlaw', gra_perp, 'Mie',
+        md=_mdust, amin=_amin_g, amax=_amax_g, p=_p_g)
+
+    # Follow the graphie grain assumption Draine
+    #   1/3 parallel and 2/3 perpendicular
+    orient_frac = [1./3., 2./3.]
+
+    # do the calculation for each orientation
+    gra_sca, gra_ext = 0.0, 0.0 # lores version
+    gra_sca_CK, gra_ext_CK = 0.0, 0.0 # hires C K edge region
+    for f, gp in zip(orient_frac, [gra_gpop_para, gra_gpop_perp]):
+        gp.calculate_ext(_hc/_ANGSTROMS_CK[::-1], unit='kev')
+        gra_sca_CK += f * gp.tau_sca
+        gra_ext_CK += f * gp.tau_ext
+        gp.calculate_ext(_egrid_lores, unit='kev')
+        gra_sca += f * gp.tau_sca
+        gra_ext += f * gp.tau_ext
+
+    # cobble together the final cross-sections
+    ext_gra = _insert_xsect(_egrid_lores, egrid_CK, gra_ext, gra_ext_CK)
+    sca_gra = _insert_xsect(_egrid_lores, egrid_CK, gra_sca, gra_sca_CK)
 
     # smooth the xs behavior for energies > esmooth
     def _smooth_xs(esmooth, xs, pslope):
