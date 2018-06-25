@@ -86,7 +86,7 @@ _FINAL_FILE = 'xs_ext_grid.fits'
 
 print("Creating a final energy grid of length %d" % (len(_EGRID)) )
 # in the past: 25800
-# now (2018.06.24): 28405
+# now (2018.06.24): 25530
 
 # Low resulotion grids for computing
 # This is for computing the cross-sections, then later
@@ -96,7 +96,7 @@ _egrid_lores = np.logspace(-1.3, 1.1, 100.0)
 _ANGSTROMS_OK   = np.linspace(22.0, 28.0, 1200) # 5 mA resolution
 _ANGSTROMS_FeL  = np.linspace(15.0, 21.0, 1200) # 5 mA resolution
 _ANGSTROMS_MgSi = np.linspace(5.0, 11.0, 1200) # 5 mA resolution
-_ANGSTROMS_FeK  = np.linspace(1.5, 1.9, 1200) # 3.3 mA resolution
+_ANGSTROMS_FeK  = np.linspace(1.5, 1.9, 250) # 16 mA resolution
 _ANGSTROMS_CK   = np.linspace(35, 48, 2600) # 5 mA resolution
 
 ##-------------- Supporting structures and functions -----------------##
@@ -172,10 +172,7 @@ def _tau_ext_E( E, params ):
 ##-------------- Compute silicate values --------------##
 
 def silicate_xs():
-    egrid_sil = np.copy(_egrid_lores)
     region_list = [_ANGSTROMS_OK, _ANGSTROMS_FeL, _ANGSTROMS_MgSi, _ANGSTROMS_FeK]
-    for edge in region_list:
-        egrid_sil = _insert_edge_grid(egrid_sil, _hc/edge[::-1])
 
     sil_params = [_amin_s, _amax_s, _p_s, _rho_s, _mdust, 'Silicate']
     print("Making Silicate cross section with\n\tamin=%.3f\n\tamax=%.3f\n\tp=%.2f\n\trho=%.2f" \
@@ -196,11 +193,17 @@ def silicate_xs():
 
     sil_gpop.calculate_ext(_egrid_lores, unit='kev')
     # cobble together the final cross-sections
+    sca_sil   = np.copy(sil_gpop.tau_sca)
+    egrid_sil = np.copy(_egrid_lores)
     for reg, xsect in zip(region_list, sil_sca_by_reg):
-        sca_sil = _insert_xsect(_egrid_lores, _hc/reg[::-1], sil_gpop.tau_sca, xsect)
+        sca_sil = _insert_xsect(egrid_sil, _hc/reg[::-1], sca_sil, xsect)
+        egrid_sil = _insert_edge_grid(egrid_sil, _hc/reg[::-1])
 
+    ext_sil   = np.copy(sil_gpop.tau_ext)
+    egrid_sil2 = np.copy(_egrid_lores)
     for reg, xsect in zip(region_list, sil_ext_by_reg):
-        ext_sil = _insert_xsect(_egrid_lores, _hc/reg[::-1], sil_gpop.tau_ext, xsect)
+        ext_sil = _insert_xsect(egrid_sil2, _hc/reg[::-1], ext_sil, xsect)
+        egrid_sil2 = _insert_edge_grid(egrid_sil2, _hc/reg[::-1])
 
     _write_all_xs_fits(_outdir+_silfile, egrid_sil, ext_sil, sca_sil, sil_params)
     return
