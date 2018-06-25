@@ -10,7 +10,7 @@ subroutine ismdust(ear, ne, param, ifl, photar)
 implicit none
 integer,parameter :: num_param = 3
 integer,parameter :: ngrain=1
-integer,parameter :: nemod=25800 !Number of elements for each cross section.
+integer,parameter :: nemod=25530 !Number of elements for each cross section.
 integer :: ne, ifl, a
 double precision :: msil, mgra, rshift, emod(1:nemod), coemod(nemod)
 double precision :: bxs(0:ngrain,nemod), bener(nemod)
@@ -32,7 +32,7 @@ version='0.1'
   print *, '##-------------------------------------------------------------------##'
   print *, ' '
   call read_cross_sections_ismdust(nemod,bxs,ifl,bener)
-  startup=.false.  
+  startup=.false.
  endif
 ! Model parameters
 msil = param(1)
@@ -75,7 +75,7 @@ logical :: anynull
 character (len=255) :: fgmstr
 external :: fgmstr
 !Number of elements for each grain type cross section.
-nemax=25800
+nemax=25530
 ! Where do we look for the data?
 ismdust_root = trim(fgmstr('ISMDUSTROOT'))
 if (ismdust_root .EQ. '') then
@@ -222,4 +222,3 @@ stop
 endif
 k=klo
 end subroutine dbinsrch_ismdust
-

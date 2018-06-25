@@ -84,10 +84,6 @@ _EGRID = np.append(np.append(_Etemp[_Etemp < _FeK[0]], _FeK),
 
 _FINAL_FILE = 'xs_ext_grid.fits'
 
-print("Creating a final energy grid of length %d" % (len(_EGRID)) )
-# in the past: 25800
-# now (2018.06.24): 25530
-
 # Low resulotion grids for computing
 # This is for computing the cross-sections, then later
 # we will interpolate those cross-sections onto _EGRID
@@ -304,4 +300,7 @@ if __name__ == '__main__':
         graphite_xs()
     if 'combine' in args:
         #print('combine on')
+        print("Creating a final energy grid of length %d" % (len(_EGRID)) )
+        # in the past: 25800
+        # now (2018.06.24): 25530
         make_xs_fits()
