@@ -10,9 +10,9 @@ subroutine ismdust(ear, ne, param, ifl, photar)
 implicit none
 integer,parameter :: num_param = 3
 integer,parameter :: ngrain=1
-integer,parameter :: nemod=25800 !Number of elements for each cross section.
+integer,parameter :: nemod=25530 !Number of elements for each cross section.
 integer :: ne, ifl, a
-double precision :: msil, mgra, rshift, emod(1:nemod), coemod(nemod)
+double precision :: msil, mgra, rshift, emod(nemod), coemod(nemod)
 double precision :: bxs(0:ngrain,nemod), bener(nemod)
 double precision :: zfac
 real :: ear(0:ne), param(num_param), photar(ne)
@@ -27,12 +27,9 @@ version='0.1'
   print *, 'WARNING: If used in conjunction with neutral metal absorption models'
   print *, '(e.g. TBabs, TBnew), be sure to change abundances to stop'
   print *, 'from overestimating the ISM metal absorption component.'
-  print *, '##-------------------------------------------------------------------##'
-  print *, '!! ISMdust is best as a template for absorption edges, not continuum !!'
-  print *, '##-------------------------------------------------------------------##'
   print *, ' '
   call read_cross_sections_ismdust(nemod,bxs,ifl,bener)
-  startup=.false.  
+  startup=.false.
  endif
 ! Model parameters
 msil = param(1)
@@ -75,7 +72,7 @@ logical :: anynull
 character (len=255) :: fgmstr
 external :: fgmstr
 !Number of elements for each grain type cross section.
-nemax=25800
+nemax=25530
 ! Where do we look for the data?
 ismdust_root = trim(fgmstr('ISMDUSTROOT'))
 if (ismdust_root .EQ. '') then
@@ -98,15 +95,15 @@ call ftmahd(inunit,2,hdutype,status)
 !Read in one energy grid (column 1)
 colnum=1
 do j=1,nemax
-call ftgcvd(inunit,colnum,j,felem,1,nulld,ener(j),anynull,status)
+  call ftgcvd(inunit,colnum,j,felem,1,nulld,ener(j),anynull,status)
 enddo
 
 !Read in the cross section information
 do i=0,ngrain
-colnum=i+2
-do j=1,nemax
-call ftgcvd(inunit,colnum,j,felem,1,nulld,xs(i,j),anynull,status)
-enddo
+  colnum=i+2
+  do j=1,nemax
+    call ftgcvd(inunit,colnum,j,felem,1,nulld,xs(i,j),anynull,status)
+    enddo
 enddo
 
 ! Report on errors (done before closing the file in case the error
@@ -116,7 +113,7 @@ enddo
 ! the first time it is used. An alternative would be to use xwrite()
 ! with a low chatter level.
 !
-! This message could be displayed only once, but it is probaly worth
+! This message could be displayed only once, but it is probably worth
 ! repeating each time it is used.
 if (status .ne. 0) then
 write (*,*) 'ERROR: unable to read cross sections from ', filename2
@@ -136,18 +133,17 @@ integer,parameter :: ngrain=1, out_unit=20
 integer :: bnene, ifl
 integer :: i, j
 double precision :: msil, mgra
-double precision :: bener(0:bnene), bxs2(0:ngrain,bnene), e1(0:bnene)
+double precision :: bener(bnene), bxs2(0:ngrain,bnene), e1(bnene)
 double precision :: tau, coeff(bnene)
 double precision :: zfac
 real hphoto, gphoto
 external hphoto, gphoto
 
 ! Calculates the optical depth and the extinction coefficient exp(-tau)
-e1(0)=(bener(0)*zfac)/1.d3
 do i=1,bnene
-e1(i)=(bener(i)*zfac)/1.d3
-tau=mgra*bxs2(1,i) + msil*bxs2(0,i)
-coeff(i)=dexp(-tau)
+  e1(i) = (bener(i)*zfac)/1.d3
+  tau   = msil * bxs2(0,i) + mgra * bxs2(1,i)
+  coeff(i) = dexp(-tau)
 enddo
 
 end subroutine extinction_ismdust
@@ -155,44 +151,32 @@ end subroutine extinction_ismdust
 subroutine map_to_grid_ismdust(new_en,nne,old_en, one, nflux, old_flu,ifl)
 ! This routine maps to a given grid
 implicit none
-integer :: i, j, k, one, nne, bmin, bmax,ifl
+integer :: i, j, k, one, nne, bmin, bmax, ifl, btemp
 double precision :: new_en(0:nne)
-double precision :: old_en(0:one), old_flu(one)
-double precision :: stemp,etemp, s, etemp2
+double precision :: old_en(one), old_flu(one)
+double precision :: etemp, s
 real :: nflux(nne)
 integer,parameter :: out_unit=20
 do i=1,nne
-nflux(i)=real(0.d0)
-call dbinsrch_ismdust(new_en(i-1),bmin,old_en,one+1)
-call dbinsrch_ismdust(new_en(i),bmax,old_en,one+1)
-bmin = bmin-1
-bmax = bmax-1
-! Linear interpolation
-if (bmin.eq.bmax) then
-if(new_en(i).le.old_en(1))then
-s=real(old_flu(1))
-else if(new_en(i).gt.old_en(one))then
-s=real(old_flu(one))
-else
-do j=2,one
-if(new_en(i).gt.old_en(j-1).and.new_en(i).le.old_en(j))then
-etemp2=(new_en(i)+new_en(i-1))/2
-s=old_flu(j-1)+(old_flu(j)-old_flu(j-1))*(etemp2-old_en(j-1))/(old_en(j)-old_en(j-1))
-endif
-enddo
-endif
-! Average (integral)
-else
-stemp=0.d0
-etemp=0.d0
-do k=bmin,bmax
-stemp=stemp+(old_flu(k))*(old_en(k)-old_en(k-1))
-etemp=etemp+(old_en(k)-old_en(k-1))
-enddo
-s=real(stemp/etemp)
-endif
-nflux(i)=real(s)
-enddo
+  nflux(i)=0.
+  call dbinsrch_ismdust(new_en(i-1),bmin,old_en,one+1)
+  call dbinsrch_ismdust(new_en(i),bmax,old_en,one+1)
+  etemp = (new_en(i)+new_en(i-1))/2
+  ! Linear interpolation
+  if (bmin.eq.bmax) then
+    if(new_en(i).le.old_en(0)) then
+      s = real(old_flu(1))
+    else if(new_en(i).gt.old_en(one)) then
+      s = real(old_flu(one))
+    else
+      s = old_flu(bmin) + (old_flu(bmax+1)-old_flu(bmin)) * (etemp-old_en(bmin)) / (old_en(bmax+1)-old_en(bmin))
+      endif
+  else
+    call dbinsrch_olivine(etemp,btemp,old_en,one+1)
+    s = old_flu(btemp) + (old_flu(btemp+1)-old_flu(btemp)) * (etemp-old_en(btemp)) / (old_en(btemp+1)-old_en(btemp))
+    endif
+  nflux(i) = real(s)
+  enddo
 end subroutine map_to_grid_ismdust
 ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 subroutine dbinsrch_ismdust(e,k,ener,n)
@@ -222,4 +206,3 @@ stop
 endif
 k=klo
 end subroutine dbinsrch_ismdust
-
