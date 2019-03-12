@@ -126,17 +126,17 @@ When you want to invoke the model, use the require function in ISIS to load ismd
 To set up the model extinction model with a power law continuum, for example, do:
 
     isis> require("ismdust");
-    isis> fit_fun("ismdust(1, powerlaw(1))");
+    isis> fit_fun("ismdust(1) * powerlaw(1)");
 
 **For absorption component only**
 
     isis> require("ismdust");
-    isis> fit_fun("ismdust_abs(1, powerlaw(1))");
+    isis> fit_fun("ismdust_abs(1) * powerlaw(1)");
 
 **For scattering component only**
 
     isis> require("ismdust");
-    isis> fit_fun("ismdust_sca(1, powerlaw(1))");
+    isis> fit_fun("ismdust_sca(1) * powerlaw(1)");
 
 See `ismdust_isis/test_ismdust.sl`
 
@@ -147,7 +147,7 @@ Use the same set up instructions as above.
 To run the model with a power law continuum, for example, do:
 
     isis> require("olivineabs");
-    isis> fit_fun("olivineabs(1, powerlaw(1))");
+    isis> fit_fun("olivineabs(1) * powerlaw(1)");
 
 See also `ismdust_isis/test_olivine.sl`
 
@@ -160,4 +160,4 @@ Set an environment variable to point to the location of the Fe-L edge templates:
 To invoke the model:
 
     isis> require("FeLedge");
-    isis> fit_fun("FeLedge(1, powerlaw(1))");
+    isis> fit_fun("FeLedge(1) * powerlaw(1)");

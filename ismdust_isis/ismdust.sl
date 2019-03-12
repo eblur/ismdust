@@ -22,11 +22,27 @@ private define read_xsect( filename )
     return struct{wavel=wavel[[::-1]], tau=xext[[::-1]], tau_abs=xabs[[::-1]], tau_sca=xsca[[::-1]]};
 }
 
-static variable X_lo, X_hi, Value;
-static variable sil_ext = read_xsect(SIL_FILE);
-static variable gra_ext = read_xsect(GRA_FILE);
+private variable X_lo, X_hi, Value;
+private variable sil_ext = read_xsect(SIL_FILE);
+private variable gra_ext = read_xsect(GRA_FILE);
 
-define ismdust_fit(lo, hi, par, fun)
+private define param_default_structure( value, freeze, pmin, pmax,
+   hmin, hmax, pstep, prstep)
+{
+   variable param_def = struct{value, freeze, min, max, hard_min,
+                               hard_max, step, relstep};
+   param_def.value=value;
+   param_def.freeze=freeze;
+   param_def.min=pmin;
+   param_def.max=pmax;
+   param_def.hard_min=hmin;
+   param_def.hard_max=hmax;
+   param_def.step=pstep;
+   param_def.relstep=prstep;
+   return param_def;
+}
+
+define ismdust_fit(lo, hi, par)
 {
     variable sil_md   = par[0];
     variable gra_md   = par[1];
@@ -35,27 +51,28 @@ define ismdust_fit(lo, hi, par, fun)
     variable tau  = sil_md * interpol(Angs,sil_ext.wavel,sil_ext.tau) +
                     gra_md * interpol(Angs,gra_ext.wavel,gra_ext.tau);
 
-    return fun * exp(-tau);
+    return exp(-tau);
 }
 
 define ismdust_defaults(i)
 {
     switch(i)
     { case 0: % sil_md
-    return ( 0.6, 0, 0, 10000 );
+       return param_default_structure( 0.6, 0, 0, 100, 0, 10000, 
+                                       1.e-3, 1.e-3 );
     }
     { case 1: % gra_md
-    return ( 0.4, 0, 0, 10000 );
+       return param_default_structure( 0.4, 0, 0, 100, 0, 10000, 
+                                       1.e-3, 1.e-3 );
     }
 }
 
-add_slang_function ("ismdust", ["sil_md","gra_md"]);
-set_function_category("ismdust", ISIS_FUN_OPERATOR);
+add_slang_function ("ismdust", ["sil_md [1e-4 g/cm^2]","gra_md [1e-4 g/cm^2]"]);
 set_param_default_hook("ismdust", "ismdust_defaults");
 
 %%------- Absorption only model
 
-define ismdust_abs_fit(lo, hi, par, fun)
+define ismdust_abs_fit(lo, hi, par)
 {
     variable sil_md   = par[0];
     variable gra_md   = par[1];
@@ -64,27 +81,15 @@ define ismdust_abs_fit(lo, hi, par, fun)
     variable tau  = sil_md * interpol(Angs,sil_ext.wavel,sil_ext.tau_abs) +
                     gra_md * interpol(Angs,gra_ext.wavel,gra_ext.tau_abs);
 
-    return fun * exp(-tau);
+    return exp(-tau);
 }
 
-define ismdust_abs_defaults(i)
-{
-    switch(i)
-    { case 0: % sil_md
-    return ( 0.6, 0, 0, 10000 );
-    }
-    { case 1: % gra_md
-    return ( 0.4, 0, 0, 10000 );
-    }
-}
-
-add_slang_function ("ismdust_abs", ["sil_md","gra_md"]);
-set_function_category("ismdust_abs", ISIS_FUN_OPERATOR);
-set_param_default_hook("ismdust_abs", "ismdust_abs_defaults");
+add_slang_function ("ismdust_abs", ["sil_md [1e-4 g/cm^2]","gra_md [1e-4 g/cm^2]"]);
+set_param_default_hook("ismdust_abs", "ismdust_defaults");
 
 %%------- Scattering only model
 
-define ismdust_sca_fit(lo, hi, par, fun)
+define ismdust_sca_fit(lo, hi, par)
 {
     variable sil_md   = par[0];
     variable gra_md   = par[1];
@@ -93,20 +98,8 @@ define ismdust_sca_fit(lo, hi, par, fun)
     variable tau  = sil_md * interpol(Angs,sil_ext.wavel,sil_ext.tau_sca) +
                     gra_md * interpol(Angs,gra_ext.wavel,gra_ext.tau_sca);
 
-    return fun * exp(-tau);
+    return exp(-tau);
 }
 
-define ismdust_sca_defaults(i)
-{
-    switch(i)
-    { case 0: % sil_md
-    return ( 0.6, 0, 0, 10000 );
-    }
-    { case 1: % gra_md
-    return ( 0.4, 0, 0, 10000 );
-    }
-}
-
-add_slang_function ("ismdust_sca", ["sil_md","gra_md"]);
-set_function_category("ismdust_sca", ISIS_FUN_OPERATOR);
-set_param_default_hook("ismdust_sca", "ismdust_abs_defaults");
+add_slang_function ("ismdust_sca", ["sil_md [1e-4 g/cm^2]","gra_md [1e-4 g/cm^2]"]);
+set_param_default_hook("ismdust_sca", "ismdust_defaults");
