@@ -103,3 +103,23 @@ define ismdust_sca_fit(lo, hi, par)
 
 add_slang_function ("ismdust_sca", ["sil_md [1e-4 g/cm^2]","gra_md [1e-4 g/cm^2]"]);
 set_param_default_hook("ismdust_sca", "ismdust_defaults");
+
+%% ------ Scattering halo spectral model
+
+define ismdust_halo_fit(lo, hi, par)
+{
+    variable sil_md   = par[0];
+    variable gra_md   = par[1];
+
+    variable Angs = 0.5*(lo+hi);
+    variable tau_sca = sil_md * interpol(Angs,sil_ext.wavel,sil_ext.tau_sca) +
+                       gra_md * interpol(Angs,gra_ext.wavel,gra_ext.tau_sca);
+    variable tau_abs = sil_md * interpol(Angs,sil_ext.wavel,sil_ext.tau_abs) +
+                       gra_md * interpol(Angs,gra_ext.wavel,gra_ext.tau_abs);
+
+    return exp(-tau_abs) * (1.0 - exp(-tau_sca));
+}
+
+add_slang_function ("ismdust_halo", ["sil_md [1e-4 g/cm^2]","gra_md [1e-4 g/cm^2]"]);
+set_param_default_hook("ismdust_halo", "ismdust_defaults");
+
