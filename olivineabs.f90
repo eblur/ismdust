@@ -59,23 +59,22 @@ integer,parameter :: out_unit=20
 integer :: bnene, ifl, i, j, status
 integer :: nemax
 double precision :: ener(bnene), xabs(bnene)
-character (*), parameter :: fileloc = 'olivine_abs.fits'
+character (*), parameter :: fileloc = '/edge_files/olivine_abs.fits'
 character (*), parameter :: olivinereadchat = 'olivineabs: reading from '
 character (len=255 + 29) :: filename2 ! len(fileloc)
-character (len=240) :: local_dir = './edge_files/'
+character (len=240) :: local_dir = '.'
 character (len=255) :: ismdust_root = ''
 character (len=len(olivinereadchat)+len(filename2)) :: chatmsg = ''
 integer inunit,readwrite,blocksize
 integer :: hdutype,colnum
 integer :: felem=1, nulld=0
 logical :: anynull
-character (len=255) :: fgmstr
-external :: fgmstr
 nemax=13047 !Number of elements for each grain type cross section.
 ! Where do we look for the data?
-ismdust_root = trim(fgmstr('ISMDUSTROOT'))
+call getenv('ISMDUSTROOT', ismdust_root)
 if (ismdust_root .EQ. '') then
 ismdust_root = local_dir
+print *, 'cannot find any ISMDUSTROOT environment'
 endif
 ! parameters to specify the opening process
 status=0

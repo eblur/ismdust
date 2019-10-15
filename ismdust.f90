@@ -18,7 +18,7 @@ double precision :: zfac
 real :: ear(0:ne), param(num_param), photar(ne)
 logical :: startup=.true.
 character (len=40) version
-version='0.1'
+version='2.6'
  if(startup)then
   print *, ' '
   print *, 'ISMdust: High resolution XAFS model Version',version
