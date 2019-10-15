@@ -69,14 +69,13 @@ integer inunit,readwrite,blocksize
 integer :: hdutype,colnum
 integer :: felem=1, nulld=0
 logical :: anynull
-character (len=255) :: fgmstr
-external :: fgmstr
 !Number of elements for each grain type cross section.
 nemax=25530
 ! Where do we look for the data?
-ismdust_root = trim(fgmstr('ISMDUSTROOT'))
+call getenv('ISMDUSTROOT', ismdust_root)
 if (ismdust_root .EQ. '') then
 ismdust_root = local_dir
+print *, 'cannot find any ISMDUSTROOT environment'
 endif
 ! parameters to specify the opening process
 status=0
