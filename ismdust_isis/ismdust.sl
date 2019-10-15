@@ -14,7 +14,7 @@ variable ISMPATH  = getenv("ISMDUSTROOT");
 variable SIL_FILE = ISMPATH + "/edge_files/silicate_xs.fits";
 variable GRA_FILE = ISMPATH + "/edge_files/graphite_xs.fits";
 
-private define read_xsect( filename )
+define read_xsect( filename )
 {
     variable wavel, xext, xsca, xabs;
     (wavel, xext, xabs, xsca) = fits_read_col(filename, "angstroms", "ext", "abs", "sca");
@@ -117,6 +117,8 @@ define ismdust_halo_fit(lo, hi, par)
     variable tau_abs = sil_md * interpol(Angs,sil_ext.wavel,sil_ext.tau_abs) +
                        gra_md * interpol(Angs,gra_ext.wavel,gra_ext.tau_abs);
 
+    print(mean(exp(-tau_abs)));
+    print(mean(1.0 - exp(-tau_sca)));
     return exp(-tau_abs) * (1.0 - exp(-tau_sca));
 }
 
